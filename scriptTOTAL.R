@@ -9,8 +9,6 @@ install.packages("DescTools")
 install.packages("dplyr")
 install.packages("tsibble")
 install.packages("feasts")
-#adicionei o framework shiny
-install.packages("shiny")
 
 library(readxl)
 library(DescTools)
@@ -23,36 +21,7 @@ library(seasonalview)
 library(dplyr)
 library(tsibble)
 library(feasts)
-library(shiny)
 ############################ DASHBOARD WEB SHINY ###############################
-#EXEMPLOS#
-runExample("05_sliders")
-##########
-library(shiny)
-
-# Define UI ----
-ui <- fluidPage(
-  titlePanel("My Shiny App"),
-  sidebarLayout(
-    sidebarPanel(),
-    mainPanel(
-      h1("First level title"),
-      h2("Second level title"),
-      h3("Third level title"),
-      h4("Fourth level title"),
-      h5("Fifth level title")
-    )
-  )
-)
-
-# Define server logic ----
-server <- function(input, output) {
-  
-}
-
-# Run the app ----
-shinyApp(ui = ui, server = server)
-
 ############################ FIM DASHBOARD WEB SHINY ###########################
 
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
