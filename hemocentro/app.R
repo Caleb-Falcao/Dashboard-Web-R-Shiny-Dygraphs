@@ -27,38 +27,38 @@ library(htmltools)
 library(bslib)
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 
-dados_total = read_excel("C:\\projetoR\\dados_sangue.xlsx", sheet = "total",col_names = FALSE)
-mytsTotal = ts(dados_total, start = c(2014,1), end = c(2021,12), frequency = 12)
-mytsTotal
-autoplot = autoplot(mytsTotal, ylab = "Nº de bolsas", xlab = "Tempo")
-boxplot(mytsTotal)
-summary(mytsTotal)
-
-dados_aferese = read_excel("C:\\projetoR\\dados_sangue.xlsx", sheet = "aferese",col_names = FALSE)
-mytsaferese = ts(dados_aferese, start = c(2014,1), end = c(2021,12), frequency = 12)
-mytsaferese
-autoplot(mytsaferese, ylab = "Nº de bolsas", xlab = "Tempo")
-boxplot(mytsaferese)
-
-############################ FIM INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ############
-
-############################ ANÁLISE EXPLORATÓRIA ##############################
-
-split.screen(figs=c(1,2))
-screen(1)
-plot(mytsTotal, main = "Bolsas sangue Total", xlab = "Tempo", ylab = "Nº de bolsas total")
-screen(2)
-plot(mytsaferese, main = "Bolsas sangue Aférese", xlab = "Tempo", ylab = "Nº de bolsas aférese")
-close.screen(all=T)
-
-autoplot(mstl(mytsTotal))
-autoplot(mstl(mytsaferese))
-
-plot(mstl(mytsTotal), main = "Decomposição série sangue total")
-plot(mstl(mytsaferese), main = "Decomposição série sangue aférese")
-
-summary(mytsTotal)
-summary(mytsaferese)
+# dados_total = read_excel("C:\\projetoR\\dados_sangue.xlsx", sheet = "total",col_names = FALSE)
+# mytsTotal = ts(dados_total, start = c(2014,1), end = c(2021,12), frequency = 12)
+# mytsTotal
+# autoplot = autoplot(mytsTotal, ylab = "Nº de bolsas", xlab = "Tempo")
+# boxplot(mytsTotal)
+# summary(mytsTotal)
+# 
+# dados_aferese = read_excel("C:\\projetoR\\dados_sangue.xlsx", sheet = "aferese",col_names = FALSE)
+# mytsaferese = ts(dados_aferese, start = c(2014,1), end = c(2021,12), frequency = 12)
+# mytsaferese
+# autoplot(mytsaferese, ylab = "Nº de bolsas", xlab = "Tempo")
+# boxplot(mytsaferese)
+# 
+# ############################ FIM INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ############
+# 
+# ############################ ANÁLISE EXPLORATÓRIA ##############################
+# 
+# split.screen(figs=c(1,2))
+# screen(1)
+# plot(mytsTotal, main = "Bolsas sangue Total", xlab = "Tempo", ylab = "Nº de bolsas total")
+# screen(2)
+# plot(mytsaferese, main = "Bolsas sangue Aférese", xlab = "Tempo", ylab = "Nº de bolsas aférese")
+# close.screen(all=T)
+# 
+# autoplot(mstl(mytsTotal))
+# autoplot(mstl(mytsaferese))
+# 
+# plot(mstl(mytsTotal), main = "Decomposição série sangue total")
+# plot(mstl(mytsaferese), main = "Decomposição série sangue aférese")
+# 
+# summary(mytsTotal)
+# summary(mytsaferese)
 
 ############################ FIM ANÁLISE EXPLORATÓRIA ##########################
 
