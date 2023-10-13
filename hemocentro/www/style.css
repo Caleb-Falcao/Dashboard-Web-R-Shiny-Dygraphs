@@ -3,6 +3,37 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Poppins', sans-serif;
+    
 }
+body{
+}
+.container-fluid{
+    background-color:rgb(240, 240, 240);
+    margin: 10px;
 
-header{}
+}
+header{
+   
+}
+/*.row my-2{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; 
+    grid-template-rows: auto; 
+    gap: 10px; 
+}*/
+.card{
+    border: 1px solid #000;
+    padding: 10px;
+    text-align: center;
+    
+}
+p{text-align: center;}
+span{
+    
+}
+.card-title{
+    font-family: 'Ubuntu', sans-serif;
+}
+.card-text{
+    font-family: 'Ubuntu', sans-serif;
+}
