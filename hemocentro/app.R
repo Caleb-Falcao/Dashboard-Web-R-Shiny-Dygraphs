@@ -9,25 +9,27 @@
 # install.packages("shiny")
 # install.packages("htmltools")
 # install.packages("bslib")
-library(readxl)
-library(DescTools)
-library(forecast)
-library(ggplot2)
-library(urca)
-library(lmtest)
-library(seasonal)
-library(seasonalview)
-library(dplyr)
-library(tsibble)
-library(feasts)
-####
+# install.packages("readxl")
+# install.packages("readxl")
 
+#library(DescTools)
+#library(forecast)
+#library(ggplot2)
+#library(urca)
+#library(lmtest)
+#library(seasonal)
+#library(seasonalview)
+#library(dplyr)
+#library(tsibble)
+#library(feasts)
+####
+library(readxl)
 library(shiny)
 library(htmltools)
 library(bslib)
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 
-dados_total = read_excel("C:\\tcc_dashboard\\hemocentro\\dados_sangue.xlsx", sheet = "total",col_names = FALSE)
+dados_total = read_excel("dados_sangue.xlsx", sheet = "total",col_names = FALSE)
 mytsTotal = ts(dados_total, start = c(2014,1), end = c(2021,12), frequency = 12)
 print(mytsTotal)
 
@@ -93,7 +95,7 @@ ui <- bootstrapPage(
     #periodo do dados
     options = options_html,
     #calcular o total para o ano de 2020(serie_temporal)
-    total_2020 = sum(window(mytsTotal, start=c(2020,1), end=c(2020,12))),
+    total = sum(window(mytsTotal, start=c(2014,1), end=c(2021,12))),
     #render grafico de barra
     grafico_barra = plotOutput(outputId = "distPlot"
     ),
