@@ -1,171 +1,171 @@
 <!DOCTYPE html>
 <html lang="pt">
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+  </head>
 
-<head>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
-
-<body>
-  <!--Header contendo dividido em grid contendo uma linha e 
+  <body>
+    <!--Header contendo dividido em grid contendo uma linha e 
       duas colunas sendo respectivamente, imagem com a logo e 
       um input em tempo real com a data de inicio dos graficos
     -->
-  <header>
-    <div class="row mt-3">
-      <div class="col-3">
-        <img src="img/logo.png" class="img-fluid w-75 float-start" alt="logo" />
+    <header class="bg-custom">
+      <div class="row mt-3">
+        <div class="col-3">
+          <img
+            src="img/logo.png"
+            class="img-fluid w-75 float-start"
+            alt="logo"
+          />
+        </div>
+        <!--end = alinhado a direita-->
+        <div class="col-9 text-end">
+          <div class="form-group">
+            <label for="ano">Selecione o ano:</label>
+            <select class="form-control" id="ano">
+              <!-- As opções serão preenchidas pelo Shiny -->
+              {{options}}
+            </select>
+          </div>
+        </div>
       </div>
-      <!--end = alinhado a direita-->
-      <div class="col-9 text-end">
-        <label for="data">Data</label>
-        <input type="date" name="data" id="data" class="float-end" />
-      </div>
-    </div>
-  </header>
-  <div class="container-fluid px-4">
-    <!--g = gutter 3, espaçamento entre as colunas
+    </header>
+    <div class="container-fluid px-4">
+      <!--g = gutter 3, espaçamento entre as colunas
           my-2 = margin vertical, espaçamento entre as linhas.
           Uma linha com 3 colunas, cada coluna com 2 linhas
       -->
-    <div class="row g-5 my-5 p-0" >
-      <!--coluna 1-->
-      <div class="col-4">
-        <div class="row my-5">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Total Bolsas</h5>
-              <span class="material-icons">
-                bloodtype
-              </span>
+      <div class="row g-5 my-5">
+        <!--coluna 1-->
+        <div class="col-4">
+          <div class="row my-2">
+            <div class="card ">
+              <div class="card-body ">
+                <h5 class="card-title">Total Bolsas</h5>
+                <span class="material-icons"> bloodtype </span>
+                <p class="card-text">{{total_2020}} bolsas</p>
+              </div>
+            </div>
+          </div>
+          <div class="row my-2">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Mediana</h5>
+                <span class="material-icons"> medication_liquid </span>
+                <p class="card-text">576 bolsas</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--coluna 2-->
+        <div class="col-4">
+          <div class="row my-2">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Total plaquetas aferese</h5>
+                <span class="material-icons"> bloodtype </span>
+                <p class="card-text">254 bolsas</p>
+              </div>
+            </div>
+          </div>
+          <div class="row my-2">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Minimo</h5>
+                <span class="material-icons"> bloodtype </span>
+                <p class="card-text">540 bolsas</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--coluna 3-->
+        <div class="col-4">
+          <div class="row my-2">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Maximo</h5>
+                <span class="material-icons"> bloodtype </span>
 
-              <p class="card-text">15.765 bolsas</p>
+                <p class="card-text">3580 bolsas</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="row my-2">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Mediana</h5>
-              <span class="material-icons">
-                medication_liquid
-              </span>
-              <p class="card-text">576 bolsas</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!--coluna 2-->
-      <div class="col-4">
-        <div class="row my-2">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Total plaquetas aferese</h5>
-              <span class="material-icons">
-                bloodtype
-              </span>
-              <p class="card-text">254 bolsas</p>
-            </div>
-          </div>
-        </div>
-        <div class="row my-2">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Minimo</h5>
-              <span class="material-icons">
-                bloodtype
-              </span>
-              <p class="card-text">540 bolsas</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!--coluna 3-->
-      <div class="col-4">
-        <div class="row my-5">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Maximo</h5>
-              <span class="material-icons">
-                bloodtype
-              </span>
-             
-              <p class="card-text">3580 bolsas</p>
-            </div>
-          </div>
-        </div>
-        <div class="row my-2">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Média doação p/Mês de bolsas</h5>
-              <span class="material-icons">
-                date_range
-              </span>
-              
-              <p class="card-text">857 bolsas</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!--3º divisao - Graficos de linha-->
-    <div class="row">
-      
-        <label for="data">Data</label>
-        <input type="date" name="data" id="data" class="float-end" />
-      
-      <!--apresentar grafico atual de linha-->
-      <div class="col">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Gráfico Atual</h5>
-            {{inputgrafico}}
-          </div>
-        </div>
-      </div>
-      <!--apresentar grafico predicao de linha-->
-      <div class="col">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Gráfico Predição</h5>
-            <p class="card-text">
-              <img src="img/grafico_predicao.png" class="img-fluid" alt="grafico predicao" />
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!--4º divisao - Graficos de barras-->
-    <div class="row">
-      <!--apresentar grafico atual de barras-->
-      <div class="col">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Gráfico Atual</h5>
-            <p class="card-text">
-              <img src="img/grafico_atual.png" class="img-fluid" alt="grafico atual" />
-            </p>
-          </div>
-        </div>
-      </div>
-      <!--apresentar grafico predicao de barras-->
-      <div class="col">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Gráfico Predição</h5>
-            <p class="card-text">
-              <img src="img/grafico_predicao.png" class="img-fluid" alt="grafico predicao" />
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <footer>
-    <p>Desenvolvido por Caleb Falcão e Rafael Silva</p>
-  </footer>
-</body>
+          <div class="row my-2">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Média doação p/Mês de bolsas</h5>
+                <span class="material-icons"> date_range </span>
 
+                <p class="card-text">857 bolsas</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--3º divisao - Graficos de linha-->
+      <div class="row">
+        <!--input data-->
+        <div class="col-12 text-end">
+          <label for="data">Data</label>
+          <input type="date" name="data" id="data" class="float-end" />
+        </div>
+        <!------------------------------------------------->
+        <!--apresentar grafico atual de linha-->
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Gráfico Atual</h5>
+            </div>
+          </div>
+        </div>
+        <!--apresentar grafico predicao de linha-->
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Gráfico Predição</h5>
+              <p class="card-text">
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--4º divisao - Graficos de barras-->
+      <div class="row">
+        <!--apresentar grafico atual de barras-->
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Gráfico Atual</h5>
+              <p class="card-text">
+                <img
+                />
+              </p>
+            </div>
+          </div>
+        </div>
+        <!--apresentar grafico predicao de barras-->
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Gráfico Predição</h5>
+              <p class="card-text">
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      <p>Desenvolvido por Caleb Falcão e Rafael Silva</p>
+    </footer>
+  </body>
 </html>

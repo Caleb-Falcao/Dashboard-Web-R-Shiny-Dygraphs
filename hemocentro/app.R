@@ -27,9 +27,11 @@ library(htmltools)
 library(bslib)
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 
-# dados_total = read_excel("C:\\projetoR\\dados_sangue.xlsx", sheet = "total",col_names = FALSE)
-# mytsTotal = ts(dados_total, start = c(2014,1), end = c(2021,12), frequency = 12)
-# mytsTotal
+dados_total = read_excel("C:\\tcc_dashboard\\hemocentro\\dados_sangue.xlsx", sheet = "total",col_names = FALSE)
+mytsTotal = ts(dados_total, start = c(2014,1), end = c(2021,12), frequency = 12)
+print(mytsTotal)
+
+
 # autoplot = autoplot(mytsTotal, ylab = "Nº de bolsas", xlab = "Tempo")
 # boxplot(mytsTotal)
 # summary(mytsTotal)
@@ -66,6 +68,9 @@ library(bslib)
 # bs_theme_preview
 theme = bs_theme(version = 5.0, font_scale = 1.2, spacer = "2rem",
                  bootswatch = "materia")
+# Gere o HTML para as opções
+options_html <- paste0('<option>', as.character(2014:2021), '</option>', collapse = '')
+
 
 # Define UI for application
 ui <- bootstrapPage(
@@ -74,7 +79,7 @@ ui <- bootstrapPage(
   #Tag head
   tags$head(
     tags$meta(charset = "UTF-8"),
-    tags$link(rel="stylesheet", type="text/css", href="www/style.css"),
+    tags$link(rel="stylesheet", type="text/css", href="style.css"),
     tags$link(href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css",
               rel="stylesheet",
               integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC",
@@ -85,11 +90,10 @@ ui <- bootstrapPage(
   htmlTemplate(
     #renderizar a pagina html
     "www/index.html",
-    #widget de inputs
-    inputgrafico = tagList(
-      sliderInput(inputId = "bins", label = "Number of bins:", min = 1, max = 50, value = 30),
-      submitButton(text = "Apply Changes", icon = NULL, width = NULL)
-    ),
+    #periodo do dados
+    options = options_html,
+    #calcular o total para o ano de 2020(serie_temporal)
+    total_2020 = sum(window(mytsTotal, start=c(2020,1), end=c(2020,12))),
     #render grafico de barra
     grafico_barra = plotOutput(outputId = "distPlot"
     ),
@@ -99,12 +103,10 @@ ui <- bootstrapPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   #criando o grafico de barra
-  output$distPlot <- renderPlot({
-    x    <- faithful$waiting
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
-    hist(x, breaks = bins, col = "#75AADB", border = "white",
-         xlab = "Waiting time to next eruption (in mins)",
-         main = "Histogram of waiting times")
+  output$total <- renderText({
+    ano <- as.numeric(input$ano)
+    total <- sum(window(mytsTotal, start=c(ano,1), end=c(ano,12)))
+    paste("O total para o ano", ano, "é", round(total, 2))
   })
 }
 
