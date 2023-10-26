@@ -18,7 +18,7 @@
       duas colunas sendo respectivamente, imagem com a logo e 
       um input em tempo real com a data de inicio dos graficos
     -->
-    <header >
+    <header>
       <div class="row mt-3">
         <div class="col-3">
           <img
@@ -31,10 +31,7 @@
         <div class="col-9 text-end">
           <div class="form-group">
             <label for="ano">Selecione o ano:</label>
-            <select class="form-control" id="ano">
-              <!-- As opções serão preenchidas pelo Shiny -->
-              {{options}}
-            </select>
+            {{intervalo_tempo}}
           </div>
         </div>
       </div>
@@ -49,10 +46,10 @@
         <div class="col-4">
           <div class="row my-2">
             <div class="card">
-              <div class="card-body ">
+              <div class="card-body">
                 <h5 class="card-title">Total Bolsas</h5>
                 <span class="material-icons"> bloodtype </span>
-                <p class="card-text">{{total}} bolsas</p>
+                <p class="card-text">{{card}} bolsas</p>
               </div>
             </div>
           </div>
@@ -102,10 +99,10 @@
           <div class="row my-2">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Média doação p/Mês de bolsas</h5>
+                <h5 class="card-title">Média doação</h5>
                 <span class="material-icons"> date_range </span>
 
-                <p class="card-text">857 bolsas</p>
+                <p class="card-text"></p>
               </div>
             </div>
           </div>
@@ -113,12 +110,6 @@
       </div>
       <!--3º divisao - Graficos de linha-->
       <div class="row">
-        <!--input data-->
-        <div class="col-12 text-end">
-          <label for="data">Data</label>
-          <input type="date" name="data" id="data" class="float-end" />
-        </div>
-        <!------------------------------------------------->
         <!--apresentar grafico atual de linha-->
         <div class="col">
           <div class="card">
@@ -132,8 +123,7 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Gráfico Predição</h5>
-              <p class="card-text">
-              </p>
+              <p class="card-text"></p>
             </div>
           </div>
         </div>
@@ -146,8 +136,7 @@
             <div class="card-body">
               <h5 class="card-title">Gráfico Atual</h5>
               <p class="card-text">
-                <img
-                />
+                <img />
               </p>
             </div>
           </div>
@@ -157,8 +146,7 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Gráfico Predição</h5>
-              <p class="card-text">
-              </p>
+              <p class="card-text"></p>
             </div>
           </div>
         </div>

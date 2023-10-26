@@ -23,6 +23,10 @@
 #library(tsibble)
 #library(feasts)
 ####
+###exemplo zoo####
+#install.packages("zoo")
+library(zoo)
+################
 library(readxl)
 library(shiny)
 library(htmltools)
@@ -70,8 +74,8 @@ print(mytsTotal)
 # bs_theme_preview
 theme = bs_theme(version = 5.0, font_scale = 1.2, spacer = "2rem",
                  bootswatch = "materia")
-# Gere o HTML para as opções
-options_html <- paste0('<option>', as.character(2014:2021), '</option>', collapse = '')
+
+
 
 
 # Define UI for application
@@ -92,10 +96,13 @@ ui <- bootstrapPage(
   htmlTemplate(
     #renderizar a pagina html
     "www/index.html",
-    #periodo do dados
-    options = options_html,
-    #calcular o total para o ano de 2020(serie_temporal)
-    total = sum(window(mytsTotal, start=c(2014,1), end=c(2021,12))),
+    #criar periodo do dados
+    intervalo_tempo = dateRangeInput("dates", "Selecione o periodo:",
+                   start = "2014-01-01",
+                   end   = "2021-12-31"),
+    #Mostrar total doação periodo(serie_temporal)
+    card = uiOutput("total_output"),
+    #media = uiOutput("total_output"),
     #render grafico de barra
     grafico_barra = plotOutput(outputId = "distPlot"
     ),
@@ -104,12 +111,36 @@ ui <- bootstrapPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  #criando o grafico de barra
-  output$total <- renderText({
-    ano <- as.numeric(input$ano)
-    total <- sum(window(mytsTotal, start=c(ano,1), end=c(ano,12)))
-    paste("O total para o ano", ano, "é", round(total, 2))
+  output$total_output <- renderUI({
+    # Converte a série temporal para um objeto 'zoo' para facilitar a manipulação de datas
+    z <- as.zoo(mytsTotal)
+    
+    # Obtém as datas de início e fim selecionadas pelo usuário
+    start_date <- as.yearmon(input$dates[1])
+    end_date <- as.yearmon(input$dates[2])
+    
+    # Filtra os dados para o intervalo de datas selecionado
+    z_filtered <- window(z, start=start_date, end=end_date)
+    
+    # Calcula o total dos dados no intervalo de datas selecionado
+    total <- sum(z_filtered)
+    #media
+    media <- mean(z_filtered)
+    #mediana
+    mediana
+    #Total plaquetas aferese
+    
+    #Minimo
+    
+    #maximo
+    
+    # Retorna o total como código HTML
+    HTML(paste("<h1>Total: ", total, "</h1>"))
+    
+    
   })
+  #criar o grafico de barra
+  
 }
 
 # Run the application 
