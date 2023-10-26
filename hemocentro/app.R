@@ -42,8 +42,8 @@ print(mytsTotal)
 # boxplot(mytsTotal)
 # summary(mytsTotal)
 # 
-# dados_aferese = read_excel("C:\\projetoR\\dados_sangue.xlsx", sheet = "aferese",col_names = FALSE)
-# mytsaferese = ts(dados_aferese, start = c(2014,1), end = c(2021,12), frequency = 12)
+dados_aferese = read_excel("dados_sangue.xlsx", sheet = "aferese",col_names = FALSE)
+mytsaferese = ts(dados_aferese, start = c(2014,1), end = c(2021,12), frequency = 12)
 # mytsaferese
 # autoplot(mytsaferese, ylab = "Nº de bolsas", xlab = "Tempo")
 # boxplot(mytsaferese)
@@ -114,6 +114,7 @@ server <- function(input, output) {
   output$total_output <- renderUI({
     # Converte a série temporal para um objeto 'zoo' para facilitar a manipulação de datas
     z <- as.zoo(mytsTotal)
+    aferese <- as.zoo(mytsaferese)
     
     # Obtém as datas de início e fim selecionadas pelo usuário
     start_date <- as.yearmon(input$dates[1])
@@ -121,21 +122,23 @@ server <- function(input, output) {
     
     # Filtra os dados para o intervalo de datas selecionado
     z_filtered <- window(z, start=start_date, end=end_date)
+    aferese_filtered <- window(aferese, start=start_date,end=end_date)
     
     # Calcula o total dos dados no intervalo de datas selecionado
     total <- sum(z_filtered)
     #media
     media <- mean(z_filtered)
     #mediana
-    mediana
+    mediana <- median(z_filtered)
     #Total plaquetas aferese
-    
+    total_aferese <- sum(aferese_filtered)
     #Minimo
-    
+    minimo <- min(z_filtered)
     #maximo
+    maximo <- max(z_filtered)
     
     # Retorna o total como código HTML
-    HTML(paste("<h1>Total: ", total, "</h1>"))
+    HTML(paste("<h1>Total: ", total,"aferese" ,total_aferese,"</h1>"))
     
     
   })
