@@ -21,25 +21,29 @@
     <header>
       <div class="row mt-3">
         <div class="col-3">
-          <img
-            src="img/logo.png"
-            class="img-fluid w-75 float-start"
-            alt="logo"
-          />
+          <img src="img/logo.png" class="img-fluid w-75 float-start" alt="logo" />
         </div>
-        <!--end = alinhado a direita-->
         <div class="col-9 text-end">
-          <div class="form-group">{{intervalo_tempo}}</div>
+            <!-- Menu de navegação -->
+            <nav>
+              <a href="#home">Home</a> |
+              <a href="#graficos">Graficos</a> |
+              <a href="#sobre">Sobre</a>
+            </nav>
+            <!-- Suporte ou ajuda -->
+            <a href="#help">Ajuda</a>
         </div>
       </div>
     </header>
-    <div class="container-fluid px-4">
+    <div class="container-fluid px-4" id="graficos">
       <!--g = gutter 3, espaçamento entre as colunas
           my-2 = margin vertical, espaçamento entre as linhas.
           Uma linha com 3 colunas, cada coluna com 2 linhas
       -->
       <!--Cards feito no shiny Rstudio-->
       {{card}}
+      <!--Range da data-->
+      {{intervalo_tempo}}
       <!--3º divisao - Graficos de linha-->
       <div class="row">
         <!--apresentar grafico atual de linha-->
@@ -67,8 +71,8 @@
         <div class="col">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Gráfico Atual</h5>
-              <p class="card-text"></p>
+              <h5 class="card-title">Bolsas de sangue total com previsão</h5>
+              <p class="card-text">{{grafico_previsao}}</p>
             </div>
           </div>
         </div>
@@ -83,8 +87,11 @@
         </div>
       </div>
     </div>
-    <footer>
-      <p>Desenvolvido por Caleb Falcão e Rafael Silva</p>
+    <footer class="footer mt-auto py-3">
+      <div class="container text-center">
+        <span style="color: black;">Desenvolvido por Caleb Falcão e Rafael Silva</span><br>
+        <span style="color: black;">&copy; 2023 Todos os direitos reservados</span>
+      </div>
     </footer>
   </body>
 </html>

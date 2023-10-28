@@ -6,7 +6,7 @@
 # install.packages("bslib")
 # ler arquivo xl
 # install.packages("readxl")
-# plotar grafico
+# modelos
 # install.packages("forecast")
 # graficos de linha
 # install.packages("dygraphs")
@@ -20,30 +20,27 @@ library(bslib)
 library(ggplot2)
 library(forecast)
 library(dygraphs)
+
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 
 dados_total <- read_excel("dados_sangue.xlsx", sheet = "total", col_names = FALSE)
 mytsTotal <- ts(dados_total, start = c(2014, 1), end = c(2021, 12), frequency = 12)
-print(mytsTotal)
-autoplot <- autoplot(mytsTotal, ylab = "Nº de bolsas", xlab = "Tempo")
-####################################################################################
-
 dados_aferese <- read_excel("dados_sangue.xlsx", sheet = "aferese", col_names = FALSE)
 mytsaferese <- ts(dados_aferese, start = c(2014, 1), end = c(2021, 12), frequency = 12)
-# mytsaferese
-# autoplot(mytsaferese, ylab = "Nº de bolsas", xlab = "Tempo")
+#print(mytsaferese)
+#autoplot <- autoplot(mytsaferese, ylab = "Nº de bolsas", xlab = "Tempo")
 # boxplot(mytsaferese)
 #
 # ############################ FIM INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ############
 #
 # ############################ ANÁLISE EXPLORATÓRIA ##############################
 #
-split.screen(figs = c(1, 2))
-screen(1)
-plot(mytsTotal, main = "Bolsas sangue Total", xlab = "Tempo", ylab = "Nº de bolsas total")
-# screen(2)
-# plot(mytsaferese, main = "Bolsas sangue Aférese", xlab = "Tempo", ylab = "Nº de bolsas aférese")
-# close.screen(all=T)
+#split.screen(figs = c(1, 2))
+#screen(1)
+#plot(mytsTotal, main = "Bolsas sangue Total", xlab = "Tempo", ylab = "Nº de bolsas total")
+#screen(2)
+#plot(mytsaferese, main = "Bolsas sangue Aférese", xlab = "Tempo", ylab = "Nº de bolsas aférese")
+#close.screen(all=T)
 #
 # autoplot(mstl(mytsTotal))
 # autoplot(mstl(mytsaferese))
@@ -55,6 +52,51 @@ plot(mytsTotal, main = "Bolsas sangue Total", xlab = "Tempo", ylab = "Nº de bol
 # summary(mytsaferese)
 
 ############################ FIM ANÁLISE EXPLORATÓRIA ##########################
+
+############################ DEFINIÇÃO TREINO TESTE ############################
+#TotalMeses = 96
+#TotalMesesTreino = ceiling(0.8*TotalMeses) 
+#TotalMesesTeste = TotalMeses - TotalMesesTreino
+
+treinoSangueTotal = window(mytsTotal, start = c(2014,1),end=c(2021, 12))
+treinoSangueTotal
+#testeSangueTotal = window(mytsTotal, start = c(2020,6), end = c(2021,12))
+#testeSangueTotal
+
+############################ FIM DEFINIÇÃO TREINO TESTE ########################
+
+#############GERACAO MODELO ETS, ARIMA##########################################
+prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h=19)
+mytsPrevisao = prevTreinoSangueTotalSTFL$mean
+#print(prevTreinoSangueTotalSTFL$model)
+#mdlTreinoSangueTotalArima = auto.arima(treinoSangueTotal, trace=T,stepwise = F, approximation = F)
+#print(mdlTreinoSangueTotalArima)
+
+######### PLOT MODELO ETS
+print(prevTreinoSangueTotalSTFL)
+autoplot(prevTreinoSangueTotalSTFL)
+plot(prevTreinoSangueTotalSTFL, main = "Suavização exponencial - ETS(M,N,N)",
+     xlab = "Tempo",
+     ylab = "Nº de bolsas sangue total",
+     las = 1)
+##########GRAFICO MODELOS
+#plot(testeSangueTotal, xlab = "Tempo", ylab = "Nº de bolsas", col = "black")
+#lines(prevTreinoSangueTotalRL$mean, col="red")
+#lines(prevTreinoSangueTotalArima$mean, col="blue")
+#lines(prevTreinoSangueTotalSTFL$mean, col="green")
+#legend("topright", legend = c("Real", "TSLM","ARIMA(0,1,2)","ETS(M,N,N)"), col = c("black","red","blue","green"), lty = 1:2,cex=0.8)
+#close.screen(all=T)
+
+########### MODELO ARIMA
+#mdlTreinoSangueTotalArima = auto.arima(treinoSangueTotal, trace=T,stepwise = F, approximation = F)
+#print(mdlTreinoSangueTotalArima)
+
+########### MODELO ETS
+#prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h=19)
+#print(prevTreinoSangueTotalSTFL$model)
+#autoplot(prevTreinoSangueTotalSTFL$model)
+
+
 
 
 # bs_theme_preview
@@ -84,8 +126,8 @@ ui <- bootstrapPage(
     "www/index.html",
     # criar periodo do dados
     intervalo_tempo = dateRangeInput("dates", "Selecione o periodo:",
-      start = "01-01-2014",
-      end = "31-12-2021", min = "2013-01-01", max = "2022-12-31", format = "dd/mm/yyyy", startview = "month", language = "pt-BR"
+      start = "2014-01-01",
+      end = "2050-12-31", min = "2013-01-01", max = "2050-12-31", format = "dd/mm/yyyy", startview = "month", language = "pt-BR"
     ),
     # Mostrar cards com as variaveis
     card = uiOutput("total_output"),
@@ -93,19 +135,21 @@ ui <- bootstrapPage(
     grafico_linha = dygraphOutput("graficoTotal"),
     # renderizar grafico de linha sangue aferese
     grafico_linha2 = dygraphOutput("graficoAferese"),
+    grafico_previsao = dygraphOutput("graficoTotalPrevisao")
+
   )
 )
-#################################################################################
-
 
 #################################### Servidor####################################
 server <- function(input, output) {
   ############################# RenderizarUI#################################
   output$total_output <- renderUI({
+    # predicao para zoo
+    predicao <- as.zoo(mytsPrevisao)
     # Converte a série temporal para um objeto 'zoo' para facilitar a manipulação de datas
     sangue_total <- as.zoo(mytsTotal)
     aferese <- as.zoo(mytsaferese)
-
+    
     # Obtém as datas de início e fim selecionadas pelo usuário
     start_date <- as.yearmon(input$dates[1])
     end_date <- as.yearmon(input$dates[2])
@@ -113,7 +157,8 @@ server <- function(input, output) {
     # Filtra os dados para o intervalo de datas selecionado
     sangue_t_filtered <- window(sangue_total, start = start_date, end = end_date)
     aferese_filtered <- window(aferese, start = start_date, end = end_date)
-
+    ##predicao
+    predicao_filtered <- window(predicao, start = start_date, end = end_date)
     # Calcula o total dos dados no intervalo de datas selecionado
     total <- sum(sangue_t_filtered)
     # media
@@ -126,18 +171,39 @@ server <- function(input, output) {
     minimo <- min(sangue_t_filtered)
     # maximo
     maximo <- max(sangue_t_filtered)
-
+    
+    #juntando os graficos
+    dados_e_previsao <- rbind(sangue_t_filtered, as.zoo(prevTreinoSangueTotalSTFL$mean))
+    
     ################### grafico de linha sangue total #################################
     output$graficoTotal <- renderDygraph({
       dygraph(sangue_t_filtered) %>%
+        dyAxis("y", label = "Nº de bolsas total") %>%
+        dyAxis("x", label = "Tempo") %>%
+        dySeries(color = "#b60000", label="Bolsas") %>%
+        dyLegend(show = "follow") %>%
         dyRangeSelector()
     })
-    #####################################################################
     ################### grafico de linha sangue aferese #################################
     output$graficoAferese <- renderDygraph({
-      dygraph(aferese_filtered) %>%
+      dygraph(aferese_filtered)%>%
+        dyAxis("y", label = "Nº de bolsas aférese") %>%
+        dyAxis("x", label = "Tempo") %>%
+        dySeries(color = "#b60000", label="Bolsas") %>%
+        dyLegend(show = "follow") %>%
         dyRangeSelector()
     })
+    ##################grafico com predicao sangue total #############################
+    output$graficoTotalPrevisao <- renderDygraph({
+      dygraph(dados_e_previsao) %>%
+        dyAxis("y", label = "Nº de bolsas total") %>%
+        dyAxis("x", label = "Tempo") %>%
+        dySeries(color = "#b60000", label="Bolsas") %>%
+        dyLegend(show = "follow") %>%
+        dyRangeSelector()
+    })
+    
+    
     # Retorna os cards
     HTML(paste('
 <div class="row g-5 my-5">
@@ -188,7 +254,7 @@ server <- function(input, output) {
       <div class="card">
         <h5 class="card-title">Média doação</h5>
         <span class="material-icons"> date_range </span>
-        <p class="card-text">', media, "</p>
+        <p class="card-text">', media, " bolsas</p>
       </div>
     </div>
   </div>
