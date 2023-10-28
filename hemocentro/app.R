@@ -130,10 +130,11 @@ ui <- bootstrapPage(
     ),
     # Mostrar cards com as variaveis
     card = uiOutput("total_output"),
-    # renderizer grafico de linha sangue total
-    grafico_linha = dygraphOutput("graficoTotal"),
+    #renderizer grafico de linha sangue total
+    #grafico_barra_total = dygraphOutput("graficoBarraTotal"),
     # renderizar grafico de linha sangue aferese
     grafico_linha2 = dygraphOutput("graficoAferese"),
+    
     grafico_previsao = dygraphOutput("graficoTotalPrevisao")
 
   )
@@ -164,7 +165,8 @@ server <- function(input, output) {
     prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h= 19)
     
     #juntando os graficos dados e predicao
-    dados_e_previsao <- rbind(sangue_t_filtered, as.zoo(prevTreinoSangueTotalSTFL$mean))
+    previsao_filtered <- as.zoo(prevTreinoSangueTotalSTFL$mean)
+    dados_e_previsao <- cbind(sangue_t_filtered, previsao_filtered)
     
     
     dados_e_previsao_filtered <- window(dados_e_previsao, start = start_date, end = end_date)
@@ -186,15 +188,6 @@ server <- function(input, output) {
     
     
     
-    ################### grafico de linha sangue total #################################
-    output$graficoTotal <- renderDygraph({
-      dygraph(sangue_t_filtered) %>%
-        dyAxis("y", label = "Nº de bolsas total") %>%
-        dyAxis("x", label = "Tempo") %>%
-        dySeries(color = "#b60000", label="Bolsas") %>%
-        dyLegend(show = "follow") %>%
-        dyRangeSelector()
-    })
     ################### grafico de linha sangue aferese #################################
     output$graficoAferese <- renderDygraph({
       dygraph(aferese_filtered)%>%
@@ -213,7 +206,10 @@ server <- function(input, output) {
         dyLegend(show = "follow") %>%
         dyRangeSelector()
     })
-    
+    ############### grafico de barra sangue total#####################################
+    #output$graficoBarraTotal<- renderDygraph(dados_e_previsao_filtered) %>%
+    #  dyRangeSelector() %>%
+    #  dyBarChart()
     
     # Retorna os cards
     HTML(paste('
