@@ -24,9 +24,9 @@ library(dygraphs)
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 
 dados_total <- read_excel("dados_sangue.xlsx", sheet = "total", col_names = FALSE)
-mytsTotal <- ts(dados_total, start = c(2014, 1), end = c(2021, 12), frequency = 12)
+mytsTotal <- ts(dados_total, start = c(2014, 1), end = c(2022, 12), frequency = 12)
 dados_aferese <- read_excel("dados_sangue.xlsx", sheet = "aferese", col_names = FALSE)
-mytsaferese <- ts(dados_aferese, start = c(2014, 1), end = c(2021, 12), frequency = 12)
+mytsaferese <- ts(dados_aferese, start = c(2014, 1), end = c(2022, 12), frequency = 12)
 #print(mytsaferese)
 #autoplot <- autoplot(mytsaferese, ylab = "Nº de bolsas", xlab = "Tempo")
 # boxplot(mytsaferese)
@@ -58,7 +58,7 @@ mytsaferese <- ts(dados_aferese, start = c(2014, 1), end = c(2021, 12), frequenc
 #TotalMesesTreino = ceiling(0.8*TotalMeses) 
 #TotalMesesTeste = TotalMeses - TotalMesesTreino
 
-treinoSangueTotal = window(mytsTotal, start = c(2014,1),end=c(2021, 12))
+treinoSangueTotal = window(mytsTotal, start = c(2014,1),end=c(2022, 12))
 treinoSangueTotal
 #testeSangueTotal = window(mytsTotal, start = c(2020,6), end = c(2021,12))
 #testeSangueTotal
@@ -66,8 +66,7 @@ treinoSangueTotal
 ############################ FIM DEFINIÇÃO TREINO TESTE ########################
 
 #############GERACAO MODELO ETS, ARIMA##########################################
-prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h=19)
-mytsPrevisao = prevTreinoSangueTotalSTFL$mean
+
 #print(prevTreinoSangueTotalSTFL$model)
 #mdlTreinoSangueTotalArima = auto.arima(treinoSangueTotal, trace=T,stepwise = F, approximation = F)
 #print(mdlTreinoSangueTotalArima)
@@ -127,7 +126,7 @@ ui <- bootstrapPage(
     # criar periodo do dados
     intervalo_tempo = dateRangeInput("dates", "Selecione o periodo:",
       start = "2014-01-01",
-      end = "2050-12-31", min = "2013-01-01", max = "2050-12-31", format = "dd/mm/yyyy", startview = "month", language = "pt-BR"
+      end = "2030-12-31", min = "2013-01-01", max = "2030-12-31", format = "dd/mm/yyyy", startview = "month", language = "pt-BR"
     ),
     # Mostrar cards com as variaveis
     card = uiOutput("total_output"),
@@ -145,10 +144,11 @@ server <- function(input, output) {
   ############################# RenderizarUI#################################
   output$total_output <- renderUI({
     # predicao para zoo
-    predicao <- as.zoo(mytsPrevisao)
+    #predicao <- as.zoo(mytsPrevisao)
     # Converte a série temporal para um objeto 'zoo' para facilitar a manipulação de datas
     sangue_total <- as.zoo(mytsTotal)
     aferese <- as.zoo(mytsaferese)
+    
     
     # Obtém as datas de início e fim selecionadas pelo usuário
     start_date <- as.yearmon(input$dates[1])
@@ -156,9 +156,21 @@ server <- function(input, output) {
 
     # Filtra os dados para o intervalo de datas selecionado
     sangue_t_filtered <- window(sangue_total, start = start_date, end = end_date)
-    aferese_filtered <- window(aferese, start = start_date, end = end_date)
+    
     ##predicao
-    predicao_filtered <- window(predicao, start = start_date, end = end_date)
+    #predicao_filtered <- window(predicao, start = start_date, end = end_date)
+    #predicao com dados
+    # Faça a previsão para o período selecionado
+    prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h= 19)
+    
+    #juntando os graficos dados e predicao
+    dados_e_previsao <- rbind(sangue_t_filtered, as.zoo(prevTreinoSangueTotalSTFL$mean))
+    
+    
+    dados_e_previsao_filtered <- window(dados_e_previsao, start = start_date, end = end_date)
+    
+    
+    aferese_filtered <- window(aferese, start = start_date, end = end_date)
     # Calcula o total dos dados no intervalo de datas selecionado
     total <- sum(sangue_t_filtered)
     # media
@@ -172,8 +184,7 @@ server <- function(input, output) {
     # maximo
     maximo <- max(sangue_t_filtered)
     
-    #juntando os graficos
-    dados_e_previsao <- rbind(sangue_t_filtered, as.zoo(prevTreinoSangueTotalSTFL$mean))
+    
     
     ################### grafico de linha sangue total #################################
     output$graficoTotal <- renderDygraph({
@@ -195,7 +206,7 @@ server <- function(input, output) {
     })
     ##################grafico com predicao sangue total #############################
     output$graficoTotalPrevisao <- renderDygraph({
-      dygraph(dados_e_previsao) %>%
+      dygraph(dados_e_previsao_filtered) %>% 
         dyAxis("y", label = "Nº de bolsas total") %>%
         dyAxis("x", label = "Tempo") %>%
         dySeries(color = "#b60000", label="Bolsas") %>%
@@ -209,14 +220,14 @@ server <- function(input, output) {
 <div class="row g-5 my-5">
   <!--coluna 1-->
   <div class="col-4">
-    <div class="row my-2">
+    <div class="row ">
       <div class="card">
         <h5 class="card-title">Total Bolsas</h5>
         <span class="material-icons"> bloodtype </span>
         <p class="card-text">', total, ' bolsas</p>
       </div>
     </div>
-    <div class="row my-2">
+    <div class="row my-3">
       <div class="card">
         <h5 class="card-title">Mediana</h5>
         <span class="material-icons"> medication_liquid </span>
@@ -226,14 +237,14 @@ server <- function(input, output) {
   </div>
   <!--coluna 2-->
   <div class="col-4">
-    <div class="row my-2">
+    <div class="row ">
       <div class="card">
-        <h5 class="card-title">Total plaquetas aferese</h5>
+        <h5 class="card-title">Total Aferese</h5>
         <span class="material-icons"> bloodtype </span>
         <p class="card-text">', total_aferese, ' bolsas</p>
       </div>
     </div>
-    <div class="row my-2">
+    <div class="row my-3">
       <div class="card">
         <h5 class="card-title">Minimo</h5>
         <span class="material-icons"> bloodtype </span>
@@ -243,14 +254,14 @@ server <- function(input, output) {
   </div>
   <!--coluna 3-->
   <div class="col-4">
-    <div class="row my-2">
+    <div class="row ">
       <div class="card">
         <h5 class="card-title">Maximo</h5>
         <span class="material-icons"> bloodtype </span>
         <p class="card-text">', maximo, ' bolsas</p>
       </div>
     </div>
-    <div class="row my-2">
+    <div class="row my-3">
       <div class="card">
         <h5 class="card-title">Média doação</h5>
         <span class="material-icons"> date_range </span>

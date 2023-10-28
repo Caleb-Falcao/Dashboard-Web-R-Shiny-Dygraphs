@@ -7,10 +7,15 @@
 }
 
 body {
-    background-color: #dfdfdf !important;
+    background-color: #ececec !important;
 }
-
-.container-fluid {}
+.my-2{
+    margin-top: 0.5rem !important;
+}
+.container-fluid {
+    max-width: 75%;
+    margin: auto;
+}
 
 header {}
 
@@ -19,6 +24,7 @@ header {}
     border: 1px solid #000;
     padding: 10px;
     text-align: center;
+    box-shadow: none !important;
 }
 
 /*range da data*/
