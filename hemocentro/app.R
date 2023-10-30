@@ -66,9 +66,9 @@ ui <- bootstrapPage(
     # renderizar a pagina html
     "www/index.html",
     # criar periodo do dados
-    intervalo_tempo = dateRangeInput("dates", "Selecione o periodo:",
-      start = "2014-01-01",
-      end = "2024-07-31", min = "2013-01-01", max = "2030-12-31", format = "dd/mm/yyyy", startview = "month", language = "pt-BR"
+    intervalo_tempo = dateRangeInput("dates", "Selecione o período",
+      start = "2016-01-01",
+      end = "2024-07-31", min = "2010-01-01", max = "2030-12-31", format = "dd/mm/yyyy", startview = "month", language = "pt-BR"
     ),
     # Mostrar cards
     card = uiOutput("total_output"),
@@ -113,7 +113,7 @@ server <- function(input, output) {
       dygraph(dados_e_previsao_filtered) %>% 
         dyAxis("y", label = "Nº de bolsas total") %>%
         dyAxis("x", label = "Tempo") %>%
-        dySeries(color = "#b60000", label="Bolsas") %>%
+        dySeries(color = "#9f0000", label="Bolsas") %>%
         dyLegend(show = "follow") %>%
         dyRangeSelector()
     })
@@ -121,7 +121,7 @@ server <- function(input, output) {
       dygraph(dados_e_previsao_filtered) %>% 
         dyAxis("y", label = "Nº de bolsas total") %>%
         dyAxis("x", label = "Tempo") %>%
-        dySeries(color = "#b60000", label="Bolsas")%>%
+        dySeries(color = "#9f0000", label="Bolsas")%>%
       dyRangeSelector() %>%
       dyBarChart()
     })
@@ -130,7 +130,7 @@ server <- function(input, output) {
       dygraph(aferese_filtered)%>%
         dyAxis("y", label = "Nº de bolsas aférese") %>%
         dyAxis("x", label = "Tempo") %>%
-        dySeries(color = "#b60000", label="Bolsas") %>%
+        dySeries(color = "#9f0000", label="Bolsas") %>%
         dyLegend(show = "follow") %>%
         dyRangeSelector()
     })
@@ -138,7 +138,7 @@ server <- function(input, output) {
       dygraph(aferese_filtered) %>% 
         dyAxis("y", label = "Nº de bolsas aférese") %>%
         dyAxis("x", label = "Tempo") %>%
-        dySeries(color = "#b60000", label="Bolsas")%>%
+        dySeries(color = "#9f0000", label="Bolsas")%>%
         dyRangeSelector() %>%
         dyBarChart()
     })
