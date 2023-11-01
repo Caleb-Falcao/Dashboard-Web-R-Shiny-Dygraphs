@@ -7,8 +7,8 @@
 }
 
 body {
-    /*background-color: #ececec !important;*/
-    background-image: linear-gradient(rgb(230, 165, 165), rgb(192, 215, 250));
+    background-color: #ececec !important;
+    /*background-image: linear-gradient(rgb(230, 165, 165), rgb(192, 215, 250));*/
 }
 .my-2{
     margin-top: 0.5rem !important;

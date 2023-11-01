@@ -21,6 +21,7 @@ mytsTotal <- ts(dados_total, start = c(2014, 1), end = c(2022, 12), frequency = 
 dados_aferese <- read_excel("dados_sangue.xlsx", sheet = "aferese", col_names = FALSE)
 mytsaferese <- ts(dados_aferese, start = c(2014, 1), end = c(2022, 12), frequency = 12)
 ############################# FIM INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ############
+
 ############################ DEFINIÇÃO TREINO TESTE ############################
 #TotalMeses = 96
 #TotalMesesTreino = ceiling(0.8*TotalMeses) 
@@ -48,6 +49,7 @@ theme <- bs_theme(
 )
 # UI da aplicação
 ui <- bootstrapPage(
+  ############################# RenderizarUI#################################
   # bootstrap 5
   theme = theme,
   #head
@@ -68,7 +70,7 @@ ui <- bootstrapPage(
     # criar periodo do dados
     intervalo_tempo = dateRangeInput("dates", "Selecione o período",
       start = "2016-01-01",
-      end = "2024-07-31", min = "2010-01-01", max = "2030-12-31", format = "dd/mm/yyyy", startview = "month", language = "pt-BR"
+      end = "2023-12-31", min = "2010-01-01", max = "2030-12-31", format = "dd/mm/yyyy", startview = "month", language = "pt-BR"
     ),
     # Mostrar cards
     card = uiOutput("total_output"),
@@ -82,7 +84,7 @@ ui <- bootstrapPage(
 )
 #################################### Servidor####################################
 server <- function(input, output) {
-  ############################# RenderizarUI#################################
+
   output$total_output <- renderUI({
     # Obtém as datas de início e fim selecionadas pelo usuário
     start_date <- as.yearmon(input$dates[1])
@@ -114,8 +116,7 @@ server <- function(input, output) {
         dyAxis("y", label = "Nº de bolsas total") %>%
         dyAxis("x", label = "Tempo") %>%
         dySeries(color = "#9f0000", label="Bolsas") %>%
-        dyLegend(show = "follow") %>%
-        dyRangeSelector()
+        dyRangeSelector(height = 35)
     })
     output$graficoBarraTotal <- renderDygraph({
       dygraph(dados_e_previsao_filtered) %>% 
@@ -132,6 +133,7 @@ server <- function(input, output) {
         dyAxis("x", label = "Tempo") %>%
         dySeries(color = "#9f0000", label="Bolsas") %>%
         dyLegend(show = "follow") %>%
+        dyOptions(stackedGraph = TRUE) %>%
         dyRangeSelector()
     })
     output$grafico_barra_aferese <- renderDygraph({
@@ -149,14 +151,14 @@ server <- function(input, output) {
   <div class="col-4">
     <div class="row">
       <div class="card">
-        <h5 class="card-title">Maximo</h5>
+        <h5 class="card-title">Maximo doado</h5>
         <span class="material-icons"> bloodtype </span>
         <p class="card-text">', maximo, '</p>
       </div>
     </div>
     <div class="row my-3">
       <div class="card">
-        <h5 class="card-title">Minimo</h5>
+        <h5 class="card-title">Minimo doado</h5>
         <span class="material-icons"> bloodtype </span>
         <p class="card-text">', minimo, '</p>
       </div>
@@ -173,7 +175,7 @@ server <- function(input, output) {
     </div>
     <div class="row my-3">
       <div class="card">
-        <h5 class="card-title">Mediana</h5>
+        <h5 class="card-title">Mediana doação</h5>
         <span class="material-icons"> medication_liquid </span>
         <p class="card-text">', mediana, '</p>
       </div>
