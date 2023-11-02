@@ -23,25 +23,24 @@ mytsaferese <- ts(dados_aferese, start = c(2014, 1), end = c(2022, 12), frequenc
 ############################# FIM INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ############
 
 ############################ DEFINIÇÃO TREINO TESTE ############################
-#TotalMeses = 96
-#TotalMesesTreino = ceiling(0.8*TotalMeses) 
-#TotalMesesTeste = TotalMeses - TotalMesesTreino
+#total de meses de doação de sangue real
+TotalMeses = 108
+TotalMesesTreino = ceiling(0.8*TotalMeses)
+#total de meses para previsão
+TotalMesesTeste = TotalMeses - TotalMesesTreino
 treinoSangueTotal = window(mytsTotal, start = c(2014,1),end=c(2022, 12))
-treinoSangueTotal
-#testeSangueTotal = window(mytsTotal, start = c(2020,6), end = c(2021,12))
-#testeSangueTotal
 ############################ FIM DEFINIÇÃO TREINO TESTE ########################
 #############GERACAO MODELO ETS, ARIMA##########################################
 #print(prevTreinoSangueTotalSTFL$model)
 #mdlTreinoSangueTotalArima = auto.arima(treinoSangueTotal, trace=T,stepwise = F, approximation = F)
 #print(mdlTreinoSangueTotalArima)
 ######### PLOT MODELO ETS
-print(prevTreinoSangueTotalSTFL)
-autoplot(prevTreinoSangueTotalSTFL)
-plot(prevTreinoSangueTotalSTFL, main = "Suavização exponencial - ETS(M,N,N)",
-     xlab = "Tempo",
-     ylab = "Nº de bolsas sangue total",
-     las = 1)
+#print(prevTreinoSangueTotalSTFL)
+#autoplot(prevTreinoSangueTotalSTFL)
+#plot(prevTreinoSangueTotalSTFL, main = "Suavização exponencial - ETS(M,N,N)",
+#     xlab = "Tempo",
+#     ylab = "Nº de bolsas sangue total",
+#     las = 1)
 # bootstrap parametros
 theme <- bs_theme(
   version = 5.0, font_scale = 1.2, spacer = "2rem",
@@ -97,7 +96,7 @@ server <- function(input, output) {
     # Filtra os dados para o intervalo de datas selecionado aferese
     aferese_filtered <- window(aferese, start = start_date, end = end_date)
     ########### MODELO ETS
-    prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h= 19)
+    prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h= TotalMesesTeste)
     #graficos dados e predicao
     previsao <- as.zoo(prevTreinoSangueTotalSTFL$mean)
     dados_e_previsao <- cbind(sangue_t_filtered, previsao)
@@ -122,6 +121,7 @@ server <- function(input, output) {
       dygraph(dados_e_previsao_filtered) %>% 
         dyAxis("y", label = "Nº de bolsas total") %>%
         dyAxis("x", label = "Tempo") %>%
+        dyLegend(show = "follow") %>%
         dySeries(color = "#9f0000", label="Bolsas")%>%
       dyRangeSelector() %>%
       dyBarChart()
@@ -141,6 +141,7 @@ server <- function(input, output) {
         dyAxis("y", label = "Nº de bolsas aférese") %>%
         dyAxis("x", label = "Tempo") %>%
         dySeries(color = "#9f0000", label="Bolsas")%>%
+        dyLegend(show = "follow") %>%
         dyRangeSelector() %>%
         dyBarChart()
     })
