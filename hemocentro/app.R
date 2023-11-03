@@ -5,15 +5,18 @@
 # install.packages("readxl")
 # install.packages("forecast")
 # install.packages("dygraphs")
+# install.packages("shinyWidgets")
 ################bibliotecas#####################################################
 #zoo: Reestruturar serie temporal irregular, a partir de modelos genericos
 library(zoo)
 library(readxl)
 library(shiny)
+library(shinyWidgets)
 library(htmltools)
-library(bslib)
+#library(bslib)
 library(forecast)
 library(dygraphs)
+library(devtools)
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 dados_total <-
   read_excel("dados_sangue.xlsx", sheet = "total", col_names = FALSE)
@@ -67,20 +70,41 @@ ui <- bootstrapPage(
   htmlTemplate(
     #renderizar pagina
     "www/index.html",
-    #variavel com intervalo de tempo
-    intervalo_tempo = dateRangeInput(
-      "dates",
-      "Selecione o período",
-      start = "2014-01-01",
-      end = "2023-12-31",
-      min = "2014-01-01",
-      max = "2025-12-31",
-      format = "dd/mm/yyyy",
-      startview = "month",
-      language = "pt-BR"
-    ),
     #variavel que mostra os cards
     card = uiOutput("total_output"),
+    #variavel com intervalo de tempo
+    intervalo_tempo = airDatepickerInput(
+      "dates",
+      label = "Selecione o período",
+      separator = " até ",
+      value = c("2014-01-01", "2023-12-31"),
+      minDate = "2014-01-01",
+      maxDate = "2024-12-31",
+      startView = "2014-01-01",
+      view = "months",
+      #editing what the popup calendar shows when it opens
+      minView = "months",
+      dateFormat = "MM/yyyy",
+      range = TRUE,
+      autoClose = TRUE,
+      toggleSelected = TRUE,
+      addon = "none",
+      language = "pt-BR",
+      position = "bottom right"
+    )
+    #dateRangeInput(
+    #   "dates",
+    #   "Selecione o período",
+    #   start = "2014-01-01",
+    #   end = "2023-12-31",
+    #   min = "2014-01-01",
+    #   max = "2024-12-31",
+    #   format = "dd/mm/yyyy",
+    #   startview = "year",
+    #   language = "pt-BR",separator = "até"
+    # )
+    ,
+    
     #Graficos sangue total
     graficoLinhaTotal = dygraphOutput("graficoLinhaTotal"),
     grafico_barra_total = dygraphOutput("graficoBarraTotal"),
@@ -98,7 +122,9 @@ server <- function(input, output) {
     TotalMesesTreino = ceiling(0.8 * TotalMeses)
     #total de meses para previsão
     TotalMesesTeste = TotalMeses - TotalMesesTreino
-    treinoSangueTotal = window(mytsTotal, start = c(2014, 1), end = c(2022, 12))
+    treinoSangueTotal = window(mytsTotal,
+                               start = c(2014, 1),
+                               end = c(2022, 12))
     ############################################################################
     #Obtém as datas de início e fim selecionadas pelo usuário
     start_date <- as.yearmon(input$dates[1])
@@ -110,7 +136,7 @@ server <- function(input, output) {
     sangueTotalFiltro <-
       window(sangue_total, start = start_date, end = end_date)
     #Filtra os dados para o intervalo de datas selecionado aferese
-    aféreseFiltro <-
+    afereseFiltro <-
       window(aferese, start = start_date, end = end_date)
     ########### MODELO ETS
     prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h = TotalMesesTeste)
@@ -128,7 +154,11 @@ server <- function(input, output) {
     minimo <- min(sangueTotalFiltro)
     maximo <- max(sangueTotalFiltro)
     #aferese
-    total_aferese <- sum(aféreseFiltro)
+    totalAferese <- sum(afereseFiltro)
+    mediaAferese <- as.integer(mean(afereseFiltro))
+    medianaAferese <- median(afereseFiltro)
+    minimoAferese <- min(afereseFiltro)
+    maximoAferese <- max(afereseFiltro)
     ##################graficos sangue total #############################
     output$graficoLinhaTotal <- renderDygraph({
       dygraph(dados_e_previsao_filtered) %>%
@@ -149,32 +179,44 @@ server <- function(input, output) {
         dyAxis("x", label = "Tempo") %>%
         dyLegend(show = "follow") %>%
         dySeries(color = "#9f0000", label = "Bolsas") %>%
-        dyRangeSelector() %>%
+        dyRangeSelector(
+          height = 35,
+          strokeColor = "#910000",
+          fillColor = "#9f0000"
+        ) %>%
         dyBarChart()
     })
     ################### graficos de sangue aferese ################
     output$graficoLinhaAferese <- renderDygraph({
-      dygraph(aféreseFiltro) %>%
+      dygraph(afereseFiltro) %>%
         dyAxis("y", label = "Nº de bolsas aférese") %>%
         dyAxis("x", label = "Tempo") %>%
         dySeries(color = "#9f0000", label = "Bolsas") %>%
         dyLegend(show = "follow") %>%
         dyOptions(stackedGraph = TRUE) %>%
-        dyRangeSelector()
+        dyRangeSelector(
+          height = 35,
+          strokeColor = "#910000",
+          fillColor = "#9f0000"
+        )
     })
     output$graficoBarraAferese <- renderDygraph({
-      dygraph(aféreseFiltro) %>%
+      dygraph(afereseFiltro) %>%
         dyAxis("y", label = "Nº de bolsas aférese") %>%
         dyAxis("x", label = "Tempo") %>%
         dySeries(color = "#9f0000", label = "Bolsas") %>%
         dyLegend(show = "follow") %>%
-        dyRangeSelector() %>%
+        dyRangeSelector(
+          height = 35,
+          strokeColor = "#910000",
+          fillColor = "#9f0000"
+        ) %>%
         dyBarChart()
     })
     # Retorna os cards
     HTML(
-      paste('
-    <div class="container-fluid">
+      paste(
+        '
       <div class="row justify-content-center align-items-center p-3 g-5">
         <div class="col">
           <!--coluna 1-->
@@ -183,14 +225,18 @@ server <- function(input, output) {
               <div class="card">
                 <h5 class="card-title">Maximo doado</h5>
                 <span class="material-icons"> bloodtype </span>
-                <p class="card-text">', maximo, '</p>
+                <p class="card-text">',
+        maximo,
+        '</p>
               </div>
             </div>
             <div class="row my-2">
               <div class="card">
                 <h5 class="card-title">Minimo doado</h5>
                 <span class="material-icons"> bloodtype </span>
-                <p class="card-text">', minimo, '</p>
+                <p class="card-text">',
+        minimo,
+        '</p>
               </div>
             </div>
           </div>
@@ -202,14 +248,18 @@ server <- function(input, output) {
               <div class="card">
                 <h5 class="card-title">Média doação</h5>
                 <span class="material-icons"> date_range </span>
-                <p class="card-text">', media, '</p>
+                <p class="card-text">',
+        media,
+        '</p>
               </div>
             </div>
             <div class="row my-2">
               <div class="card">
                 <h5 class="card-title">Mediana doação</h5>
                 <span class="material-icons"> medication_liquid </span>
-                <p class="card-text">', mediana, '</p>
+                <p class="card-text">',
+        mediana,
+        '</p>
               </div>
             </div>
           </div>
@@ -221,7 +271,9 @@ server <- function(input, output) {
               <div class="card">
                 <h5 class="card-title">Total Sangue</h5>
                 <span class="material-icons"> bloodtype </span>
-                <p class="card-text">', total, '</p>
+                <p class="card-text">',
+        total,
+        '</p>
               </div>
             </div>
           </div>
@@ -233,7 +285,9 @@ server <- function(input, output) {
               <div class="card">
                 <h5 class="card-title">Total Aférese</h5>
                 <span class="material-icons"> bloodtype </span>
-                <p class="card-text">', total_aferese, '</p>
+                <p class="card-text">',
+        totalAferese,
+        '</p>
               </div>
             </div>
           </div>
@@ -245,14 +299,18 @@ server <- function(input, output) {
               <div class="card">
                 <h5 class="card-title">Média doação</h5>
                 <span class="material-icons"> date_range </span>
-                <p class="card-text">', media, '</p>
+                <p class="card-text">',
+        mediaAferese,
+        '</p>
               </div>
             </div>
             <div class="row my-2">
               <div class="card">
                 <h5 class="card-title">Mediana doação</h5>
                 <span class="material-icons"> medication_liquid </span>
-                <p class="card-text">', mediana, '</p>
+                <p class="card-text">',
+        medianaAferese,
+        '</p>
               </div>
             </div>
           </div>
@@ -264,7 +322,9 @@ server <- function(input, output) {
               <div class="card">
                 <h5 class="card-title">Maximo doado</h5>
                 <span class="material-icons"> bloodtype </span>
-                <p class="card-text">', maximo, '</p>
+                <p class="card-text">',
+        maximoAferese,
+        '</p>
               </div>
             </div>
           </div>
@@ -272,14 +332,15 @@ server <- function(input, output) {
             <div class="card">
               <h5 class="card-title">Minimo doado</h5>
               <span class="material-icons"> bloodtype </span>
-              <p class="card-text">', minimo, '</p>
+              <p class="card-text">',
+        minimoAferese,
+        '</p>
             </div>
           </div>
         </div>
       </div>
-    </div>
 '
-
+        
       )
     )
   })

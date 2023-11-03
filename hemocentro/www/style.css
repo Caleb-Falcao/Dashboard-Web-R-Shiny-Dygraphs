@@ -7,12 +7,20 @@
 }
 
 body {
-    background-color: #ececec !important;
-    /*background-image: linear-gradient(rgb(230, 165, 165), rgb(192, 215, 250));*/
+    /*background-color: #ececec;*/
+    background-image: linear-gradient(#ececec, rgb(204, 204, 204)) !important;
 }
-.my-2{
+
+#graficoLinhaTotal, #graficoLinhaAferese, #graficoBarraTotal, #graficoBarraAferese {
+    width: 85% !important;
+    margin: 0 auto !important;
+}
+
+.my-2 {
     /*margin-top: 0.5rem !important;
-*/}
+*/
+}
+
 .container-fluid {
     /*max-width: 50%;
     margin: auto;*/

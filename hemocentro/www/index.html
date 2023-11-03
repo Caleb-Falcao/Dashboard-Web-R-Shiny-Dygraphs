@@ -36,7 +36,7 @@
         </div>
       </div>-->
     </header>
-    <div class="container-fluid px-4" id="graficos">
+    <div class="container-fluid px-4 mx-auto " style="width: 95%;" id="graficos">
       <!--g = gutter 3, espaçamento entre as colunas
           my-2 = margin vertical, espaçamento entre as linhas.
           Uma linha com 3 colunas, cada coluna com 2 linhas
@@ -44,11 +44,15 @@
       <!--Cards feito no shiny Rstudio-->
       {{card}}
       <!--Range da data-->
-      {{intervalo_tempo}}
+      <div class="row justify-content-center align-items-center g-2">
+        <div class="col">{{intervalo_tempo}}</div>
+        <div class="col"><!--{{intervalo_tempo}}--></div>
+      </div>
+
       <!--3º divisao - Graficos de linha-->
-      <div class="row ">
-        <!--apresentar grafico atual de linha-->
-        <div class="col ">
+      <div class="row">
+        <!--bolsa total-->
+        <div class="col">
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Bolsas de sangue total com previsão</h5>
@@ -56,8 +60,8 @@
             </div>
           </div>
         </div>
-        <!--apresentar grafico predicao de linha-->
-        <div class="col ms-5">
+        <!--bolsa aférese-->
+        <div class="col">
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Bolsas plaquetas aférese</h5>
@@ -78,7 +82,7 @@
           </div>
         </div>
         <!--apresentar grafico predicao de barras-->
-        <div class="col ms-5">
+        <div class="col">
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Bolsas plaquetas aférese</h5>
