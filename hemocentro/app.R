@@ -13,7 +13,7 @@ library(readxl)
 library(shiny)
 library(shinyWidgets)
 library(htmltools)
-#library(bslib)
+library(bslib)
 library(forecast)
 library(dygraphs)
 library(devtools)
@@ -76,7 +76,7 @@ ui <- bootstrapPage(
     intervalo_tempo = airDatepickerInput(
       "dates",
       label = "Selecione o período",
-      separator = " até ",
+      separator = " - ",
       value = c("2014-01-01", "2023-12-31"),
       minDate = "2014-01-01",
       maxDate = "2024-12-31",
