@@ -11,11 +11,11 @@ body {
     /*background-image: linear-gradient(rgb(230, 165, 165), rgb(192, 215, 250));*/
 }
 .my-2{
-    margin-top: 0.5rem !important;
-}
+    /*margin-top: 0.5rem !important;
+*/}
 .container-fluid {
-    max-width: 75%;
-    margin: auto;
+    /*max-width: 50%;
+    margin: auto;*/
 }
 
 header {}
