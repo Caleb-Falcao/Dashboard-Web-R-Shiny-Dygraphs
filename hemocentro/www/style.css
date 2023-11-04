@@ -1,8 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap');
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Ubuntu', sans-serif;
+    font-family: 'Fredoka', sans-serif;
 
 }
 
@@ -11,22 +13,26 @@ body {
     background-image: linear-gradient(#ececec, rgb(204, 204, 204)) !important;
 }
 
-#graficoLinhaTotal, #graficoLinhaAferese, #graficoBarraTotal, #graficoBarraAferese {
-    width: 85% !important;
-    margin: 0 auto !important;
+header {
+    background-color: rgb(204, 204, 204);
+    margin-bottom: 1rem;
 }
 
-.my-2 {
-    /*margin-top: 0.5rem !important;
-*/
+/*Container do header*/
+.containerhead {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+    font-size: 0.8rem;
 }
 
-.container-fluid {
-    /*max-width: 50%;
-    margin: auto;*/
-}
+.container-fluid {}
 
-header {}
+.my-2 {}
+
 
 /*Cards*/
 .card {
@@ -34,15 +40,42 @@ header {}
     padding: 10px;
     text-align: center;
     box-shadow: none !important;
+    border-radius: 1.1rem !important;
 }
 
-/*range da data*/
-#dates {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+/*cards das variaveis*/
+.gradient-cards .card {
+    background: linear-gradient(to right, #FF5C5C, #F8C5C5);
+    text-align: left !important;
+    font-size: 20px;
+    display: flex;
+    justify-content: space-between !important;
+    border-color: #ececec;
+    color: #1A1A1A !important;
+
 }
 
-p {
-    text-align: center;
+.gradient-cards img {
+    width: 4.5rem;
+    height: 3.5rem;
+}
+
+
+/*Graficos*/
+#graficoLinhaTotal, #graficoLinhaAferese, #graficoBarraTotal, #graficoBarraAferese {
+    width: 85% !important;
+    margin: 0 auto !important;
+}
+
+/*texto sangue total*/
+.texto_sangue {
+    margin-top: 1.2rem;
+    font-size: 220%;
+}
+
+/*Logo hemocentro*/
+.hemocentroImagem {
+    width: 15%;
+    height: 15%;
+    border-radius: 1.1rem;
 }

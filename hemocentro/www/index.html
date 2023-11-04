@@ -19,7 +19,16 @@
       um input em tempo real com a data de inicio dos graficos
     -->
     <header>
-      <!--<div class="row mt-3">
+      <div class="containerhead">
+        <img
+          src="img/hemocentro.png"
+          alt="hemocentro"
+          class="hemocentroImagem"
+        />
+        <div class="texto"><h1 class="texto_sangue">Gestão de Sangue</h1></div>
+      </div>
+    </header>
+    <!--<div class="row mt-3">
         <<div class="col-3">
           <img
             src="img/logo.png"
@@ -35,8 +44,7 @@
           </nav>
         </div>
       </div>-->
-    </header>
-    <div class="container-fluid px-4 mx-auto " style="width: 95%;" id="graficos">
+    <div class="container-fluid px-4 mx-auto" style="width: 95%" id="graficos">
       <!--g = gutter 3, espaçamento entre as colunas
           my-2 = margin vertical, espaçamento entre as linhas.
           Uma linha com 3 colunas, cada coluna com 2 linhas
@@ -46,7 +54,9 @@
       <!--Range da data-->
       <div class="row justify-content-center align-items-center g-2">
         <div class="col">{{intervalo_tempo}}</div>
-        <div class="col"><!--{{intervalo_tempo}}--></div>
+        <div class="col d-flex justify-content-end">
+          {{intervalo_tempo_aferese}}
+        </div>
       </div>
 
       <!--3º divisao - Graficos de linha-->

@@ -16,7 +16,7 @@ library(htmltools)
 library(bslib)
 library(forecast)
 library(dygraphs)
-library(devtools)
+
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 dados_total <-
   read_excel("dados_sangue.xlsx", sheet = "total", col_names = FALSE)
@@ -74,7 +74,26 @@ ui <- bootstrapPage(
     card = uiOutput("total_output"),
     #variavel com intervalo de tempo
     intervalo_tempo = airDatepickerInput(
-      "dates",
+      "datesSangueTotal",
+      label = "Selecione o período",
+      separator = " - ",
+      value = c("2014-01-01", "2023-12-31"),
+      minDate = "2014-01-01",
+      maxDate = "2024-12-31",
+      startView = "2014-01-01",
+      view = "months",
+      #editing what the popup calendar shows when it opens
+      minView = "months",
+      dateFormat = "MM/yyyy",
+      range = TRUE,
+      autoClose = TRUE,
+      toggleSelected = TRUE,
+      addon = "none",
+      language = "pt-BR",
+      position = "bottom right"
+    ),
+    intervalo_tempo_aferese = airDatepickerInput(
+      "dates_aferese",
       label = "Selecione o período",
       separator = " - ",
       value = c("2014-01-01", "2023-12-31"),
@@ -125,10 +144,16 @@ server <- function(input, output) {
     treinoSangueTotal = window(mytsTotal,
                                start = c(2014, 1),
                                end = c(2022, 12))
+    treinoAfereseTotal = window(mytsaferese,
+                                start = c(2014, 1),
+                                end = c(2022, 12))
+    
     ############################################################################
     #Obtém as datas de início e fim selecionadas pelo usuário
-    start_date <- as.yearmon(input$dates[1])
-    end_date <- as.yearmon(input$dates[2])
+    start_date <- as.yearmon(input$datesSangueTotal[1])
+    end_date <- as.yearmon(input$datesSangueTotal[2])
+    start_date_aferese <- as.yearmon(input$dates_aferese[1])
+    end_date_aferese <- as.yearmon(input$dates_aferese[2])
     #Converter a série temporal para um objeto 'zoo' para corrigir erros
     sangue_total <- as.zoo(mytsTotal)
     aferese <- as.zoo(mytsaferese)
@@ -137,16 +162,29 @@ server <- function(input, output) {
       window(sangue_total, start = start_date, end = end_date)
     #Filtra os dados para o intervalo de datas selecionado aferese
     afereseFiltro <-
-      window(aferese, start = start_date, end = end_date)
+      window(aferese, start = start_date_aferese, end = end_date_aferese)
     ########### MODELO ETS
+    #sangue ets
     prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h = TotalMesesTeste)
+    #aferese ETS
+    prevTreinoSangueAfereseSTFL = stlf(treinoAfereseTotal, h = TotalMesesTeste)
+    
     #Ajustando o modelo com a função predict
     
     #graficos dados e predicao
-    previsao <- prevTreinoSangueTotalSTFL$mean
-    dados_e_previsao <- cbind(sangueTotalFiltro, previsao)
+    previsaoTotal <- prevTreinoSangueTotalSTFL$mean
+    dados_e_previsao <- cbind(sangueTotalFiltro, previsaoTotal)
     dados_e_previsao_filtered <-
       window(dados_e_previsao, start = start_date, end = end_date)
+    
+    previsao_aferese <- prevTreinoSangueAfereseSTFL$mean
+    dados_e_previsao_aferese <-
+      cbind(afereseFiltro, previsao_aferese)
+    dados_e_previsao_aferese_filtered <-
+      window(dados_e_previsao_aferese,
+             start = start_date_aferese,
+             end = end_date_aferese)
+    
     # sangue total
     total <- sum(sangueTotalFiltro)
     media <- as.integer(mean(sangueTotalFiltro))
@@ -165,8 +203,9 @@ server <- function(input, output) {
         dyAxis("y", label = "Nº de bolsas total") %>%
         dyAxis("x", label = "Tempo") %>%
         dySeries(color = "#9f0000", label = "Bolsas") %>%
-        dyLegend(show = "follow") %>%
-        dyOptions(fillGraph = TRUE) %>%
+        dySeries("previsaoTotal", label = "Previsão")%>%
+        dyLegend(show = "follow", width = "0.8em") %>%
+        dyOptions(fillGraph = TRUE, fillAlpha = 0.3) %>%
         dyRangeSelector(
           height = 35,
           strokeColor = "#910000",
@@ -178,7 +217,7 @@ server <- function(input, output) {
         dyAxis("y", label = "Nº de bolsas total") %>%
         dyAxis("x", label = "Tempo") %>%
         dyLegend(show = "follow") %>%
-        dySeries(color = "#9f0000", label = "Bolsas") %>%
+        dySeries(color = "#9f0000", label = "Bolsas")  %>%
         dyRangeSelector(
           height = 35,
           strokeColor = "#910000",
@@ -188,12 +227,13 @@ server <- function(input, output) {
     })
     ################### graficos de sangue aferese ################
     output$graficoLinhaAferese <- renderDygraph({
-      dygraph(afereseFiltro) %>%
+      dygraph(dados_e_previsao_aferese_filtered) %>%
         dyAxis("y", label = "Nº de bolsas aférese") %>%
         dyAxis("x", label = "Tempo") %>%
         dySeries(color = "#9f0000", label = "Bolsas") %>%
-        dyLegend(show = "follow") %>%
-        dyOptions(stackedGraph = TRUE) %>%
+        dySeries("previsao_aferese", label = "Previsão")%>%
+        dyLegend(show = "follow", width = "0.8em") %>%
+        dyOptions(fillGraph = TRUE, fillAlpha = 0.3) %>%
         dyRangeSelector(
           height = 35,
           strokeColor = "#910000",
@@ -201,7 +241,7 @@ server <- function(input, output) {
         )
     })
     output$graficoBarraAferese <- renderDygraph({
-      dygraph(afereseFiltro) %>%
+      dygraph(dados_e_previsao_aferese_filtered) %>%
         dyAxis("y", label = "Nº de bolsas aférese") %>%
         dyAxis("x", label = "Tempo") %>%
         dySeries(color = "#9f0000", label = "Bolsas") %>%
@@ -217,26 +257,28 @@ server <- function(input, output) {
     HTML(
       paste(
         '
-      <div class="row justify-content-center align-items-center p-3 g-5">
+            <div
+        class="row justify-content-center align-items-center p-3 g-5 gradient-cards"
+      >
         <div class="col">
           <!--coluna 1-->
           <div class="col">
             <div class="row">
-              <div class="card">
-                <h5 class="card-title">Maximo doado</h5>
-                <span class="material-icons"> bloodtype </span>
-                <p class="card-text">',
-        maximo,
-        '</p>
+              <div class="card d-flex flex-row-reverse">
+                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <div>
+                  <h5 class="card-title">Maximo doado</h5>
+                  <p class="card-text">', maximo, '</p>
+                </div>
               </div>
             </div>
             <div class="row my-2">
-              <div class="card">
-                <h5 class="card-title">Minimo doado</h5>
-                <span class="material-icons"> bloodtype </span>
-                <p class="card-text">',
-        minimo,
-        '</p>
+              <div class="card d-flex flex-row-reverse">
+                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <div>
+                  <h5 class="card-title">Minimo doado</h5>
+                  <p class="card-text">', minimo, '</p>
+                </div>
               </div>
             </div>
           </div>
@@ -245,21 +287,21 @@ server <- function(input, output) {
           <!--coluna 2-->
           <div class="col">
             <div class="row">
-              <div class="card">
-                <h5 class="card-title">Média doação</h5>
-                <span class="material-icons"> date_range </span>
-                <p class="card-text">',
-        media,
-        '</p>
+              <div class="card d-flex flex-row-reverse">
+                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <div>
+                  <h5 class="card-title">Média doação</h5>
+                  <p class="card-text">', media, '</p>
+                </div>
               </div>
             </div>
             <div class="row my-2">
-              <div class="card">
-                <h5 class="card-title">Mediana doação</h5>
-                <span class="material-icons"> medication_liquid </span>
-                <p class="card-text">',
-        mediana,
-        '</p>
+              <div class="card d-flex flex-row-reverse">
+                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <div>
+                  <h5 class="card-title">Mediana doação</h5>
+                  <p class="card-text">', mediana, '</p>
+                </div>
               </div>
             </div>
           </div>
@@ -268,12 +310,12 @@ server <- function(input, output) {
           <!--coluna 3-->
           <div class="col">
             <div class="row">
-              <div class="card">
-                <h5 class="card-title">Total Sangue</h5>
-                <span class="material-icons"> bloodtype </span>
-                <p class="card-text">',
-        total,
-        '</p>
+              <div class="card d-flex flex-row-reverse">
+                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <div>
+                  <h5 class="card-title">Bolsa sangue</h5>
+                  <p class="card-text">', total, '</p>
+                </div>
               </div>
             </div>
           </div>
@@ -282,12 +324,12 @@ server <- function(input, output) {
           <!--coluna 3-->
           <div class="col">
             <div class="row">
-              <div class="card">
-                <h5 class="card-title">Total Aférese</h5>
-                <span class="material-icons"> bloodtype </span>
-                <p class="card-text">',
-        totalAferese,
-        '</p>
+              <div class="card d-flex flex-row-reverse">
+                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <div>
+                  <h5 class="card-title">Bolsa aférese</h5>
+                  <p class="card-text">', totalAferese, '</p>
+                </div>
               </div>
             </div>
           </div>
@@ -296,21 +338,21 @@ server <- function(input, output) {
           <!--coluna 5-->
           <div class="col">
             <div class="row">
-              <div class="card">
-                <h5 class="card-title">Média doação</h5>
-                <span class="material-icons"> date_range </span>
-                <p class="card-text">',
-        mediaAferese,
-        '</p>
+              <div class="card d-flex flex-row-reverse">
+                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <div>
+                  <h5 class="card-title">Média doação</h5>
+                  <p class="card-text">', mediaAferese, '</p>
+                </div>
               </div>
             </div>
             <div class="row my-2">
-              <div class="card">
-                <h5 class="card-title">Mediana doação</h5>
-                <span class="material-icons"> medication_liquid </span>
-                <p class="card-text">',
-        medianaAferese,
-        '</p>
+              <div class="card d-flex flex-row-reverse">
+                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <div>
+                  <h5 class="card-title">Mediana doação</h5>
+                  <p class="card-text">', medianaAferese, '</p>
+                </div>
               </div>
             </div>
           </div>
@@ -319,22 +361,22 @@ server <- function(input, output) {
           <!--coluna 6-->
           <div class="col">
             <div class="row">
-              <div class="card">
-                <h5 class="card-title">Maximo doado</h5>
-                <span class="material-icons"> bloodtype </span>
-                <p class="card-text">',
-        maximoAferese,
-        '</p>
+              <div class="card d-flex flex-row-reverse">
+                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <div>
+                  <h5 class="card-title">Maximo doado</h5>
+                  <p class="card-text">', maximoAferese, '</p>
+                </div>
               </div>
             </div>
           </div>
           <div class="row my-2">
-            <div class="card">
-              <h5 class="card-title">Minimo doado</h5>
-              <span class="material-icons"> bloodtype </span>
-              <p class="card-text">',
-        minimoAferese,
-        '</p>
+            <div class="card d-flex flex-row-reverse">
+              <img src="img/gota_sangue.png" alt="gota de sangue card" />
+              <div>
+                <h5 class="card-title">Minimo doado</h5>
+                <p class="card-text">', minimoAferese, '</p>
+              </div>
             </div>
           </div>
         </div>
