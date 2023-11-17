@@ -45,7 +45,7 @@ header {
 
 /*cards das variaveis*/
 .gradient-cards .card {
-    background: linear-gradient(to right, #FF5C5C, #F8C5C5);
+    background: linear-gradient(to right, #ff8383, #F8C5C5);
     text-align: left !important;
     font-size: 20px;
     display: flex;

@@ -16,7 +16,6 @@ library(htmltools)
 library(bslib)
 library(forecast)
 library(dygraphs)
-
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 dados_total <-
   read_excel("dados_sangue.xlsx", sheet = "total", col_names = FALSE)
@@ -147,9 +146,19 @@ server <- function(input, output) {
     treinoAfereseTotal = window(mytsaferese,
                                 start = c(2014, 1),
                                 end = c(2022, 12))
+    #teste para saber o mape
+    treinoTesteSangue = window(mytsTotal, start = c(2014,1),end=c(2021,3))
+    #21 meses
+    testeTotalSangue = window(mytsTotal, start = c(2021,4), end = c(2022,12))
     
-    ############################################################################
-    #Obtém as datas de início e fim selecionadas pelo usuário
+    ############################### MODELO ETS#################################
+    #sangue ets
+    prevSTLFSangueTotal = stlf(treinoTesteSangue, h = TotalMesesTeste)
+    mape = accuracy(treinoTesteSangue, prevSTLFSangueTotal$model$fitted)["Test set", "MAPE"]
+    
+    ################################MODELO ARIMA################################
+    
+    #######Obtém as datas de início e fim selecionadas pelo usuário###################
     start_date <- as.yearmon(input$datesSangueTotal[1])
     end_date <- as.yearmon(input$datesSangueTotal[2])
     start_date_aferese <- as.yearmon(input$dates_aferese[1])
@@ -166,6 +175,7 @@ server <- function(input, output) {
     ########### MODELO ETS
     #sangue ets
     prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h = TotalMesesTeste)
+    
     #aferese ETS
     prevTreinoSangueAfereseSTFL = stlf(treinoAfereseTotal, h = TotalMesesTeste)
     
