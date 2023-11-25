@@ -6,7 +6,7 @@
 # install.packages("forecast")
 # install.packages("dygraphs")
 # install.packages("shinyWidgets")
-################bibliotecas#####################################################
+################BIBLIOTECAS UTILIZADAS##########################################
 #zoo: Reestruturar serie temporal irregular, a partir de modelos genericos
 library(zoo)
 library(readxl)
@@ -36,11 +36,7 @@ mytsaferese <-
     frequency = 12
   )
 
-################## GERACAO MODELO ARIMA ########################################
-#print(prevTreinoSangueTotalSTFL$model)
-#mdlTreinoSangueTotalArima = auto.arima(treinoSangueTotal, trace=T,stepwise = F, approximation = F)
-#print(mdlTreinoSangueTotalArima)
-#################################### Aplicação Web ##########################
+#################################### APLICAÇÃO WEB SHINY #######################
 # parametros do boostrap
 theme <- bs_theme(
   version = 5.0,
@@ -49,11 +45,11 @@ theme <- bs_theme(
   bootswatch = "materia"
 )
 
-################# Processar pagina UI #######################################
+#################### FUNCAO UI SHINY #######################################
 ui <- bootstrapPage(
-  # bootstrap referenciado
+  # TEMA SETADO ANTERIORMENTE BOOTSTRAP
   theme = theme,
-  #Tag head
+  #TAG HEAD
   tags$head(
     tags$meta(charset = "UTF-8"),
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
@@ -65,23 +61,22 @@ ui <- bootstrapPage(
     ),
     tags$title("Hemocentro Dashboard")
   ),
-  ## Processar o modelo HTML
+  # TEMPLATE HTML
   htmlTemplate(
-    #renderizar pagina
+    #RENDERIZAR INDEX.HTML(PARTE ESTATICO)
     "www/index.html",
-    #variavel que mostra os cards
+    #MOSTRAR CARDS NO HTML
     card = uiOutput("total_output"),
-    #variavel com intervalo de tempo
+    #INTERVALO DE TEMPO
     intervalo_tempo = airDatepickerInput(
       "datesSangueTotal",
-      label = "Período Sangue:",
+      label = "Período Sangue Total:",
       separator = " - ",
       value = c("2014-01-01", "2023-12-31"),
       minDate = "2014-01-01",
       maxDate = "2024-12-31",
       startView = "2014-01-01",
       view = "months",
-      #editing what the popup calendar shows when it opens
       minView = "months",
       dateFormat = "MM/yyyy",
       range = TRUE,
@@ -93,14 +88,13 @@ ui <- bootstrapPage(
     ),
     intervalo_tempo_aferese = airDatepickerInput(
       "dates_aferese",
-      label = "Período Aférese:",
+      label = "Período Sangue Aférese:",
       separator = " - ",
       value = c("2014-01-01", "2023-12-31"),
       minDate = "2014-01-01",
       maxDate = "2024-12-31",
       startView = "2014-01-01",
       view = "months",
-      #editing what the popup calendar shows when it opens
       minView = "months",
       dateFormat = "MM/yyyy",
       range = TRUE,
@@ -123,22 +117,22 @@ ui <- bootstrapPage(
     # )
     ,
     
-    #Graficos sangue total
+    # CHAMADA GRAFICOS SANGUE TOTAL NO HTML
     graficoLinhaTotal = dygraphOutput("graficoLinhaTotal"),
     grafico_barra_total = dygraphOutput("graficoBarraTotal"),
-    #Graficos sangue aférese
+    # CHAMADA GRAFICOS SANGUE AFERESE NO HTML
     graficoLinhaAferese = dygraphOutput("graficoLinhaAferese"),
     grafico_barra_aferese = dygraphOutput("graficoBarraAferese")
   )
 )
-#################################### Servidor#################################
+#################################### SERVER ####################################
 server <- function(input, output) {
   output$total_output <- renderUI({
     ############################ DEFINIÇÃO TREINO TESTE ########################
-    #total de meses de doação de sangue real
+    #TOTAL MESES DOAÇÃO DE SANGUE
     TotalMeses = 108
     TotalMesesTreino = ceiling(0.8 * TotalMeses)
-    #total de meses para previsão
+    #TOTAL MESES PARA PREVISAO
     TotalMesesTeste = TotalMeses - TotalMesesTreino
     treinoSangueTotal = window(mytsTotal,
                                start = c(2014, 1),
@@ -146,68 +140,87 @@ server <- function(input, output) {
     treinoAfereseTotal = window(mytsaferese,
                                 start = c(2014, 1),
                                 end = c(2022, 12))
-    #teste para saber o mape
-    treinoTesteSangue = window(mytsTotal, start = c(2014,1),end=c(2021,3))
+    ########################### MAPE MODELOS####################################
+    #treinoTesteSangue = window(mytsTotal, start = c(2014,1),end=c(2021,3))
     #21 meses
-    testeTotalSangue = window(mytsTotal, start = c(2021,4), end = c(2022,12))
+    #testeTotalSangue = window(mytsTotal, start = c(2021,4), end = c(2022,12))
     
-    ############################### MODELO ETS#################################
-    #sangue ets
-    prevSTLFSangueTotal = stlf(treinoTesteSangue, h = TotalMesesTeste)
-    mape = accuracy(treinoTesteSangue, prevSTLFSangueTotal$model$fitted)["Test set", "MAPE"]
+    # MODELO ETS
+    #sangue total ets
+    #prevSTLFSangueTotal = stlf(treinoTesteSangue, h = TotalMesesTeste)
+    #mape = accuracy(treinoTesteSangue, prevSTLFSangueTotal$model$fitted)["Test set", "MAPE"]
+    #print(mape)
+    # MODELO ARIMA 
+    #mdlTreinoSangueTotalArima = auto.arima(treinoTesteSangue, trace=T,stepwise = F, approximation = F)
     
-    ################################MODELO ARIMA################################
-    
-    #######Obtém as datas de início e fim selecionadas pelo usuário###################
+    ########################## OBTER DATAS USUARIO #############################
     start_date <- as.yearmon(input$datesSangueTotal[1])
     end_date <- as.yearmon(input$datesSangueTotal[2])
     start_date_aferese <- as.yearmon(input$dates_aferese[1])
     end_date_aferese <- as.yearmon(input$dates_aferese[2])
-    #Converter a série temporal para um objeto 'zoo' para corrigir erros
+    #CONVERTER SERIE TEMPORAL PARA "ZOO", CORRIGIR ERROS
     sangue_total <- as.zoo(mytsTotal)
     aferese <- as.zoo(mytsaferese)
-    #Filtra os dados para o intervalo de datas selecionado
+    #FILTRAR DADOS INTERVALO SELECIONADO SANGUE TOTAL
     sangueTotalFiltro <-
       window(sangue_total, start = start_date, end = end_date)
-    #Filtra os dados para o intervalo de datas selecionado aferese
+    #FILTRAR DADOS INTERVALO SELECIONADO SANGUE AFERESE
     afereseFiltro <-
       window(aferese, start = start_date_aferese, end = end_date_aferese)
-    ########### MODELO ETS
-    #sangue ets
+    ############################### MODELO ETS #################################
+    #SANGUE TOTAL ETS
     prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h = TotalMesesTeste)
     
-    #aferese ETS
+    #AFERESE ETS
     prevTreinoSangueAfereseSTFL = stlf(treinoAfereseTotal, h = TotalMesesTeste)
     
-    #Ajustando o modelo com a função predict
-    
-    #graficos dados e predicao
+    ################################# GRAFICOS #################################
+    #GRAFICO DADOS E PREVISAO SANGUE TOTAL 
     previsaoTotal <- prevTreinoSangueTotalSTFL$mean
     dados_e_previsao <- cbind(sangueTotalFiltro, previsaoTotal)
     dados_e_previsao_filtered <-
       window(dados_e_previsao, start = start_date, end = end_date)
     
+    #GRAFICO DADOS E PREVISAO SANGUE AFERESE
     previsao_aferese <- prevTreinoSangueAfereseSTFL$mean
+    
     dados_e_previsao_aferese <-
       cbind(afereseFiltro, previsao_aferese)
+    
     dados_e_previsao_aferese_filtered <-
       window(dados_e_previsao_aferese,
              start = start_date_aferese,
              end = end_date_aferese)
     
-    # sangue total
+    # DADOS SANGUE TOTAL
     total <- sum(sangueTotalFiltro)
     media <- as.integer(mean(sangueTotalFiltro))
     mediana <- median(sangueTotalFiltro)
     minimo <- min(sangueTotalFiltro)
     maximo <- max(sangueTotalFiltro)
-    #aferese
+    # índices dos valores mínimos e máximos
+    indice_minimo <- which.min(sangueTotalFiltro)
+    indice_maximo <- which.max(sangueTotalFiltro)
+    
+    # datas correspondentes a esses índices
+    data_minima <- time(sangueTotalFiltro)[indice_minimo]
+    data_maxima <- time(sangueTotalFiltro)[indice_maximo]
+    
+    print(data_maxima)
+    # DADOS SANGUE AFERESE
     totalAferese <- sum(afereseFiltro)
     mediaAferese <- as.integer(mean(afereseFiltro))
     medianaAferese <- median(afereseFiltro)
     minimoAferese <- min(afereseFiltro)
     maximoAferese <- max(afereseFiltro)
-    ##################graficos sangue total #############################
+    # índices dos valores mínimos e máximos
+    indice_minimoA <- which.min(afereseFiltro)
+    indice_maximoA <- which.max(afereseFiltro)
+    
+    # datas correspondentes a esses índices
+    data_minimaA <- time(afereseFiltro)[indice_minimoA]
+    data_maximaA <- time(afereseFiltro)[indice_maximoA]
+    ################### PLOT GRAFICO SANGUE TOTAL ##############################
     output$graficoLinhaTotal <- renderDygraph({
       dygraph(dados_e_previsao_filtered) %>%
         dyAxis("y", label = "Nº de bolsas total") %>%
@@ -237,7 +250,7 @@ server <- function(input, output) {
         ) %>%
         dyBarChart()
     })
-    ################### graficos de sangue aferese ################
+    ##################### PLOT GRAFICO SANGUE AFERESE ##########################
     output$graficoLinhaAferese <- renderDygraph({
       dygraph(dados_e_previsao_aferese_filtered) %>%
         dyAxis("y", label = "Nº de bolsas aférese") %>%
@@ -266,7 +279,7 @@ server <- function(input, output) {
         ) %>%
         dyBarChart()
     })
-    # Retorna os cards
+    ######################### RETORNA CARDS COM DADOS ##########################
     HTML(
       paste(
         '
@@ -282,7 +295,7 @@ server <- function(input, output) {
                 <div>
                   <h5 class="card-title">Maximo doado</h5>
                   <p class="card-text">',
-        maximo,
+        maximo,':',data_maxima,
         '</p>
                 </div>
               </div>
@@ -293,7 +306,7 @@ server <- function(input, output) {
                 <div>
                   <h5 class="card-title">Minimo doado</h5>
                   <p class="card-text">',
-        minimo,
+        minimo,':',data_minima,
         '</p>
                 </div>
               </div>
@@ -395,7 +408,7 @@ server <- function(input, output) {
                 <div>
                   <h5 class="card-title">Maximo doado</h5>
                   <p class="card-text">',
-        maximoAferese,
+        maximoAferese,':',data_maximaA,
         '</p>
                 </div>
               </div>
@@ -407,7 +420,7 @@ server <- function(input, output) {
               <div>
                 <h5 class="card-title">Minimo doado</h5>
                 <p class="card-text">',
-        minimoAferese,
+        minimoAferese,':',data_minimaA,
         '</p>
               </div>
             </div>
@@ -420,6 +433,6 @@ server <- function(input, output) {
     )
   })
 }
-#####################################################################
-# Rodar aplicação
+
+##################### CHAMADA DA FUNCAO UI/SERVER SHINY ########################
 shinyApp(ui = ui, server = server)

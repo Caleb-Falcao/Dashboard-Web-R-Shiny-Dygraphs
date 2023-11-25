@@ -14,7 +14,8 @@ body {
 }
 
 header {
-    background-color: rgb(204, 204, 204);
+    background-image: linear-gradient(#ececec, #F8C5C5) !important;
+    /*background-color: ;*/
     margin-bottom: 1rem;
 }
 
@@ -45,12 +46,12 @@ header {
 
 /*cards das variaveis*/
 .gradient-cards .card {
-    background: linear-gradient(to right, #ff8383, #F8C5C5);
+    background: linear-gradient(to right, #ffc6c6, #ffe3e3);
     text-align: left !important;
     font-size: 20px;
     display: flex;
     justify-content: space-between !important;
-    border-color: #ececec;
+    border-color: rgb(204, 204, 204);
     color: #1A1A1A !important;
 
 }

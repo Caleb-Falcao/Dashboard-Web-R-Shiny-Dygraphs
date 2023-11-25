@@ -49,8 +49,7 @@
           my-2 = margin vertical, espaçamento entre as linhas.
           Uma linha com 3 colunas, cada coluna com 2 linhas
       -->
-      <!--Cards feito no shiny Rstudio-->
-      {{card}}
+      
       <!--Range da data-->
       <div class="row justify-content-center align-items-center g-2">
         <div class="col">{{intervalo_tempo}}</div>
@@ -65,7 +64,7 @@
         <div class="col">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Bolsas de sangue total com previsão</h5>
+              <h5 class="card-title">Bolsas Sangue Total</h5>
               <p class="card-text">{{graficoLinhaTotal}}</p>
             </div>
           </div>
@@ -74,7 +73,7 @@
         <div class="col">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Bolsas plaquetas aférese</h5>
+              <h5 class="card-title">Bolsas Plaquetas Aférese</h5>
               <p class="card-text">{{graficoLinhaAferese}}</p>
             </div>
           </div>
@@ -86,7 +85,7 @@
         <div class="col">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Bolsas de sangue total</h5>
+              <h5 class="card-title">Bolsas Sangue Total</h5>
               <p class="card-text">{{grafico_barra_total}}</p>
             </div>
           </div>
@@ -95,12 +94,14 @@
         <div class="col">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Bolsas plaquetas aférese</h5>
+              <h5 class="card-title">Bolsas Plaquetas Aférese</h5>
               <p class="card-text">{{grafico_barra_aferese}}</p>
             </div>
           </div>
         </div>
       </div>
+      <!--Cards feito no shiny Rstudio-->
+      {{card}}
     </div>
     <footer class="footer mt-auto py-3">
       <div class="container text-center">
