@@ -68,44 +68,53 @@ ui <- bootstrapPage(
     #MOSTRAR CARDS NO HTML
     card = uiOutput("total_output"),
     #INTERVALO DE TEMPO
-    intervalo_tempo = airDatepickerInput(
-      "datesSangueTotal",
-      label = "Período Sangue Total:",
-      separator = " - ",
-      value = c("2014-01-01", "2023-12-31"),
-      minDate = "2014-01-01",
-      maxDate = "2024-12-31",
-      startView = "2014-01-01",
-      view = "months",
-      minView = "months",
-      dateFormat = "MM/yyyy",
-      range = TRUE,
-      autoClose = TRUE,
-      toggleSelected = TRUE,
-      addon = "none",
-      language = "pt-BR",
-      position = "bottom right"
-    ),
-    intervalo_tempo_aferese = airDatepickerInput(
-      "dates_aferese",
-      label = "Período Sangue Aférese:",
-      separator = " - ",
-      value = c("2014-01-01", "2023-12-31"),
-      minDate = "2014-01-01",
-      maxDate = "2024-12-31",
-      startView = "2014-01-01",
-      view = "months",
-      minView = "months",
-      dateFormat = "MM/yyyy",
-      range = TRUE,
-      autoClose = TRUE,
-      toggleSelected = TRUE,
-      addon = "none",
-      language = "pt-BR",
-      position = "bottom right"
-    )
+    intervalo_tempo = 
+      dateRangeInput(
+        "datesSangueTotal",
+        "Período Sangue Total",
+        start = "2014-01-01",
+        end = "2023-12-31",
+        min = "2014-01-01",
+        max = "2024-12-31",
+        format = "dd/mm/yyyy",
+        startview = "year",
+        language = "pt-BR",separator = "até"
+      ),
+    intervalo_tempo_aferese = 
+      
+      dateRangeInput(
+           "dates_aferese",
+           "Período Sangue Aférese",
+           start = "2014-01-01",
+           end = "2023-12-31",
+           min = "2014-01-01",
+           max = "2024-12-31",
+           format = "dd/mm/yyyy",
+           startview = "year",
+           language = "pt-BR",separator = "até"
+         )
+    
+      #airDatepickerInput(
+      #"dates_aferese",
+      #label = "Período Sangue Aférese:",
+      #separator = " - ",
+      #value = c("2014-01-01", "2023-12-31"),
+      #minDate = "2014-01-01",
+      #maxDate = "2024-12-31",
+      #startView = "2014-01-01",
+      #view = "months",
+      #minView = "months",
+      #dateFormat = "MM/yyyy",
+      #range = TRUE,
+      #autoClose = TRUE,
+      #toggleSelected = TRUE,
+      #addon = "none",
+      #language = "pt-BR",
+      #position = "bottom right"
+    #)
+    
     #dateRangeInput(
-    #   "dates",
+    #   "dates_aferese",
     #   "Selecione o período",
     #   start = "2014-01-01",
     #   end = "2023-12-31",
@@ -206,7 +215,7 @@ server <- function(input, output) {
     data_minima <- time(sangueTotalFiltro)[indice_minimo]
     data_maxima <- time(sangueTotalFiltro)[indice_maximo]
     
-    print(data_maxima)
+    #print(data_maxima)
     # DADOS SANGUE AFERESE
     totalAferese <- sum(afereseFiltro)
     mediaAferese <- as.integer(mean(afereseFiltro))
