@@ -370,7 +370,7 @@ server <- function(input, output) {
           <div class="col">
             <div class="row">
               <div class="card d-flex flex-row-reverse">
-                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <img src="img/gota_aferese.png" alt="gota de sangue card" />
                 <div>
                   <h5 class="card-title">Bolsa Aférese</h5>
                   <p class="card-text">',
@@ -386,7 +386,7 @@ server <- function(input, output) {
           <div class="col">
             <div class="row">
               <div class="card d-flex flex-row-reverse">
-                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <img src="img/gota_aferese.png" alt="gota de sangue card" />
                 <div>
                   <h5 class="card-title">Média doação</h5>
                   <p class="card-text">',
@@ -397,7 +397,7 @@ server <- function(input, output) {
             </div>
             <div class="row my-2">
               <div class="card d-flex flex-row-reverse">
-                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <img src="img/gota_aferese.png" alt="gota de sangue card" />
                 <div>
                   <h5 class="card-title">Mediana doação</h5>
                   <p class="card-text">',
@@ -413,7 +413,7 @@ server <- function(input, output) {
           <div class="col">
             <div class="row">
               <div class="card d-flex flex-row-reverse">
-                <img src="img/gota_sangue.png" alt="gota de sangue card" />
+                <img src="img/gota_aferese.png" alt="gota de sangue card" />
                 <div>
                   <h5 class="card-title">Maximo doado</h5>
                   <p class="card-text">',
@@ -425,7 +425,7 @@ server <- function(input, output) {
           </div>
           <div class="row my-2">
             <div class="card d-flex flex-row-reverse">
-              <img src="img/gota_sangue.png" alt="gota de sangue card" />
+              <img src="img/gota_aferese.png" alt="gota de sangue card" />
               <div>
                 <h5 class="card-title">Minimo doado</h5>
                 <p class="card-text">',
