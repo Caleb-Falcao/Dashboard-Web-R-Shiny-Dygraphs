@@ -6,6 +6,7 @@
 # install.packages("forecast")
 # install.packages("dygraphs")
 # install.packages("shinyWidgets")
+
 ################BIBLIOTECAS UTILIZADAS##########################################
 #zoo: Reestruturar serie temporal irregular, a partir de modelos genericos
 library(zoo)
@@ -16,6 +17,7 @@ library(htmltools)
 library(bslib)
 library(forecast)
 library(dygraphs)
+
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 dados_total <-
   read_excel("dados_sangue.xlsx", sheet = "total", col_names = FALSE)
@@ -37,7 +39,8 @@ mytsaferese <-
   )
 
 #################################### APLICAÇÃO WEB SHINY #######################
-# parametros do boostrap
+
+# ALGUNS PARAMETROS SETADOS PARA O BOOTSTRAP
 theme <- bs_theme(
   version = 5.0,
   font_scale = 1.2,
@@ -45,30 +48,40 @@ theme <- bs_theme(
   bootswatch = "materia"
 )
 
-#################### FUNCAO UI SHINY #######################################
+#################### UI SHINY #######################################
 ui <- bootstrapPage(
+  
   # TEMA SETADO ANTERIORMENTE BOOTSTRAP
   theme = theme,
+  
   #TAG HEAD
   tags$head(
     tags$meta(charset = "UTF-8"),
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
-    tags$link(
-      href = "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css",
+    tags$link(rel="preconnect", href="https://fonts.googleapis.com"),
+    tags$link(rel = "preconnect", type = "text/css", href = "https://fonts.gstatic.com", crossorigin = "anonymous"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
+    tags$link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@500&display=swap"),
+    tags$link(rel="stylesheet", href="https://fonts.googleapis.com/icon?family=Material+Icons"),
+    tags$link(href = "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css",
       rel = "stylesheet",
       integrity = "sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC",
       crossorigin = "anonymous"
     ),
     tags$title("Hemocentro Dashboard")
   ),
-  # TEMPLATE HTML
+  
+  #TEMPLATE HTML
   htmlTemplate(
+    
     #RENDERIZAR INDEX.HTML(PARTE ESTATICO)
     "www/index.html",
+    
     #MOSTRAR CARDS NO HTML
-    card = uiOutput("total_output"),
+    cards = uiOutput("cards"),
+    
     #INTERVALO DE TEMPO
-    intervalo_tempo = 
+    intervalo_tempo_total = 
       dateRangeInput(
         "datesSangueTotal",
         "Período Sangue Total",
@@ -93,37 +106,6 @@ ui <- bootstrapPage(
            startview = "year",
            language = "pt-BR",separator = "até"
          )
-    
-      #airDatepickerInput(
-      #"dates_aferese",
-      #label = "Período Sangue Aférese:",
-      #separator = " - ",
-      #value = c("2014-01-01", "2023-12-31"),
-      #minDate = "2014-01-01",
-      #maxDate = "2024-12-31",
-      #startView = "2014-01-01",
-      #view = "months",
-      #minView = "months",
-      #dateFormat = "MM/yyyy",
-      #range = TRUE,
-      #autoClose = TRUE,
-      #toggleSelected = TRUE,
-      #addon = "none",
-      #language = "pt-BR",
-      #position = "bottom right"
-    #)
-    
-    #dateRangeInput(
-    #   "dates_aferese",
-    #   "Selecione o período",
-    #   start = "2014-01-01",
-    #   end = "2023-12-31",
-    #   min = "2014-01-01",
-    #   max = "2024-12-31",
-    #   format = "dd/mm/yyyy",
-    #   startview = "year",
-    #   language = "pt-BR",separator = "até"
-    # )
     ,
     bt_modelo = actionBttn(
       inputId = "res_btn_modelo",
@@ -131,21 +113,27 @@ ui <- bootstrapPage(
       color = "default",
       class = "btn-custom"
     ),
-    # CHAMADA GRAFICOS SANGUE TOTAL NO HTML
+    
+    #CHAMADA GRAFICOS SANGUE TOTAL NO HTML
     graficoLinhaTotal = dygraphOutput("graficoLinhaTotal"),
     grafico_barra_total = dygraphOutput("graficoBarraTotal"),
-    # CHAMADA GRAFICOS SANGUE AFERESE NO HTML
+    
+    #CHAMADA GRAFICOS SANGUE AFERESE NO HTML
     graficoLinhaAferese = dygraphOutput("graficoLinhaAferese"),
     grafico_barra_aferese = dygraphOutput("graficoBarraAferese")
   )
 )
+
 #################################### SERVER ####################################
 server <- function(input, output){
-  output$total_output <- renderUI({
+
+  output$cards <- renderUI({
     ############################ DEFINIÇÃO TREINO TESTE ########################
+    
     #TOTAL MESES DOAÇÃO DE SANGUE
     TotalMeses = 108
     TotalMesesTreino = ceiling(0.8 * TotalMeses)
+    
     #TOTAL MESES PARA PREVISAO
     TotalMesesTeste = TotalMeses - TotalMesesTreino
     treinoSangueTotal = window(mytsTotal,
@@ -154,42 +142,52 @@ server <- function(input, output){
     treinoAfereseTotal = window(mytsaferese,
                                 start = c(2014, 1),
                                 end = c(2022, 12))
+    
     ########################### MAPE MODELOS####################################
     #VARIAVEL TESTAR MAPE
-    treinoTesteSangue = window(mytsTotal, start = c(2014,1),end=c(2021,5))#18meses
-    #botão recalcular mape
+    treinoTesteSangue = window(mytsTotal, start = c(2014,1),end=c(2021,5))#18MESES
+    
+    #BTN RECALCULAR MAPE
     observeEvent(input$res_btn_modelo,{
       ########################### MAPE MODELOS###################################
       
       #CRIAÇÃO DOS MODELOS    
+      
       #MODELO ETS(SUAVIZAÇÃO EXPONENCIAL
       #prevSTLFSangueTotal = stlf(treinoTesteSangue, h = TotalMesesTeste)
       # MODELO ARIMA 
+      
       #mdlTreinoSangueTotalArima = auto.arima(treinoTesteSangue, trace=T,stepwise = F, approximation = F)
       #MODELO REGRESSÃO LINEAR
       #mdlTreinoSangueTotalRL = tslm(treinoTesteSangue ~ season + trend, data=treinoTesteSangue)
+      
       #QUANTO MENOR O MAPE, MELHOR!
       #mape_Ets = accuracy(treinoTesteSangue, prevSTLFSangueTotal$model$fitted)["Test set", "MAPE"]
       #mape_Arima = accuracy(treinoTesteSangue, mdlTreinoSangueTotalArima$fitted)["Test set", "MAPE"]
       #mapeRL = accuracy(treinoTesteSangue, mdlTreinoSangueTotalRL$fitted.values)["Test set", "MAPE"]
-      #Encontra o menor MAPE
+      
+      #ENCONTRAR MENOR MAPE
       #melhor_Mape = min(mape_Ets, mape_Arima, mapeRL)
       
-      #Armazena o melhor modelo na variável
+      #ARMAZENAR MELHOR MODELO NA VARIAVEL
       #melhorModelo <- ifelse(melhor_Mape == mape_Ets, prevTreinoSangueTotalSTFL,
       #ifelse(melhor_Mape == mape_Arima, mdlTreinoSangueTotalArima,mdlTreinoSangueTotalRL))
     })
+    
     ########################## OBTER DATAS USUARIO #############################
     start_date <- as.yearmon(input$datesSangueTotal[1])
     end_date <- as.yearmon(input$datesSangueTotal[2])
     start_date_aferese <- as.yearmon(input$dates_aferese[1])
     end_date_aferese <- as.yearmon(input$dates_aferese[2])
+    
     #CONVERTER SERIE TEMPORAL PARA "ZOO", CORRIGIR ERROS
     sangue_total <- as.zoo(mytsTotal)
     aferese <- as.zoo(mytsaferese)
+    
     #FILTRAR DADOS INTERVALO SELECIONADO SANGUE TOTAL
     sangueTotalFiltro <-
       window(sangue_total, start = start_date, end = end_date)
+    
     #FILTRAR DADOS INTERVALO SELECIONADO SANGUE AFERESE
     afereseFiltro <-
       window(aferese, start = start_date_aferese, end = end_date_aferese)
@@ -201,9 +199,10 @@ server <- function(input, output){
     prevTreinoSangueAfereseSTFL = stlf(treinoAfereseTotal, h = TotalMesesTeste)
     
     ################################# GRAFICOS #################################
-    #GRAFICO DADOS E PREVISAO SANGUE TOTAL
     previsaoTotal <- prevTreinoSangueTotalSTFL$mean
     dados_e_previsao <- cbind(sangueTotalFiltro, previsaoTotal)
+    
+    #GRAFICO DADOS E PREVISAO SANGUE TOTAL
     dados_e_previsao_filtered <-
       window(dados_e_previsao, start = start_date, end = end_date)
     
@@ -217,35 +216,36 @@ server <- function(input, output){
       window(dados_e_previsao_aferese,
              start = start_date_aferese,
              end = end_date_aferese)
-    
-    # DADOS SANGUE TOTAL
+    # DADOS ESTATISTICOS SANGUE TOTAL
     total <- sum(sangueTotalFiltro)
     media <- as.integer(mean(sangueTotalFiltro))
     mediana <- median(sangueTotalFiltro)
     minimo <- min(sangueTotalFiltro)
     maximo <- max(sangueTotalFiltro)
-    # índices dos valores mínimos e máximos
+    
+    #VALORES MINIMOS E MAXIMOS
     indice_minimo <- which.min(sangueTotalFiltro)
     indice_maximo <- which.max(sangueTotalFiltro)
     
-    # datas correspondentes a esses índices
+    # DATAS QUE CORRESPONDE AOS INDICES FILTRADOS
     data_minima <- time(sangueTotalFiltro)[indice_minimo]
     data_maxima <- time(sangueTotalFiltro)[indice_maximo]
     
-    #print(data_maxima)
     # DADOS SANGUE AFERESE
     totalAferese <- sum(afereseFiltro)
     mediaAferese <- as.integer(mean(afereseFiltro))
     medianaAferese <- median(afereseFiltro)
     minimoAferese <- min(afereseFiltro)
     maximoAferese <- max(afereseFiltro)
-    # índices dos valores mínimos e máximos
+    
+    #VALORES MINIMOS E MAXIMOS
     indice_minimoA <- which.min(afereseFiltro)
     indice_maximoA <- which.max(afereseFiltro)
     
-    # datas correspondentes a esses índices
+    # DATAS QUE CORRESPONDE AOS INDICES FILTRADOS
     data_minimaA <- time(afereseFiltro)[indice_minimoA]
     data_maximaA <- time(afereseFiltro)[indice_maximoA]
+    
     ################### PLOT GRAFICO SANGUE TOTAL ##############################
     output$graficoLinhaTotal <- renderDygraph({
       dygraph(dados_e_previsao_filtered) %>%
@@ -277,6 +277,7 @@ server <- function(input, output){
         dyBarChart()
     })
     ##################### PLOT GRAFICO SANGUE AFERESE ##########################
+    
     output$graficoLinhaAferese <- renderDygraph({
       dygraph(dados_e_previsao_aferese_filtered) %>%
         dyAxis("y", label = "Nº de bolsas aférese") %>%
@@ -305,7 +306,8 @@ server <- function(input, output){
         ) %>%
         dyBarChart()
     })
-    ######################### RETORNA CARDS COM DADOS ##########################
+    
+    ################### RETORNA CARDS COM DADOS ESTATISTICOS####################
     HTML(
       paste(
         '
@@ -454,7 +456,6 @@ server <- function(input, output){
         </div>
       </div>
 '
-        
       )
     )
   })
