@@ -61,6 +61,20 @@ header {
     height: 3.5rem;
 }
 
+.btn-custom {
+    background-color: #FFFFFF !important;
+    /* Cor de fundo branca */
+    color: #000000 !important;
+    /* Cor do texto preto */
+    border: 1px solid #000000 !important;
+    /* Borda preta */
+    display: block;
+    /* Faz o botão se comportar como um bloco */
+    margin-left: auto;
+    /* Margem automática à esquerda */
+    margin-right: auto;
+    /* Margem automática à direita */
+}
 
 /*Graficos*/
 #graficoLinhaTotal, #graficoLinhaAferese, #graficoBarraTotal, #graficoBarraAferese {

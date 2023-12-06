@@ -125,7 +125,12 @@ ui <- bootstrapPage(
     #   language = "pt-BR",separator = "até"
     # )
     ,
-    
+    bt_modelo = actionBttn(
+      inputId = "res_btn_modelo",
+      label = "Recalcular modelo",
+      color = "default",
+      class = "btn-custom"
+    ),
     # CHAMADA GRAFICOS SANGUE TOTAL NO HTML
     graficoLinhaTotal = dygraphOutput("graficoLinhaTotal"),
     grafico_barra_total = dygraphOutput("graficoBarraTotal"),
@@ -135,7 +140,7 @@ ui <- bootstrapPage(
   )
 )
 #################################### SERVER ####################################
-server <- function(input, output) {
+server <- function(input, output){
   output$total_output <- renderUI({
     ############################ DEFINIÇÃO TREINO TESTE ########################
     #TOTAL MESES DOAÇÃO DE SANGUE
@@ -150,18 +155,30 @@ server <- function(input, output) {
                                 start = c(2014, 1),
                                 end = c(2022, 12))
     ########################### MAPE MODELOS####################################
-    #treinoTesteSangue = window(mytsTotal, start = c(2014,1),end=c(2021,3))
-    #21 meses
-    #testeTotalSangue = window(mytsTotal, start = c(2021,4), end = c(2022,12))
-    
-    # MODELO ETS
-    #sangue total ets
-    #prevSTLFSangueTotal = stlf(treinoTesteSangue, h = TotalMesesTeste)
-    #mape = accuracy(treinoTesteSangue, prevSTLFSangueTotal$model$fitted)["Test set", "MAPE"]
-    #print(mape)
-    # MODELO ARIMA 
-    #mdlTreinoSangueTotalArima = auto.arima(treinoTesteSangue, trace=T,stepwise = F, approximation = F)
-    
+    #VARIAVEL TESTAR MAPE
+    treinoTesteSangue = window(mytsTotal, start = c(2014,1),end=c(2021,5))#18meses
+    #botão recalcular mape
+    observeEvent(input$res_btn_modelo,{
+      ########################### MAPE MODELOS###################################
+      
+      #CRIAÇÃO DOS MODELOS    
+      #MODELO ETS(SUAVIZAÇÃO EXPONENCIAL
+      #prevSTLFSangueTotal = stlf(treinoTesteSangue, h = TotalMesesTeste)
+      # MODELO ARIMA 
+      #mdlTreinoSangueTotalArima = auto.arima(treinoTesteSangue, trace=T,stepwise = F, approximation = F)
+      #MODELO REGRESSÃO LINEAR
+      #mdlTreinoSangueTotalRL = tslm(treinoTesteSangue ~ season + trend, data=treinoTesteSangue)
+      #QUANTO MENOR O MAPE, MELHOR!
+      #mape_Ets = accuracy(treinoTesteSangue, prevSTLFSangueTotal$model$fitted)["Test set", "MAPE"]
+      #mape_Arima = accuracy(treinoTesteSangue, mdlTreinoSangueTotalArima$fitted)["Test set", "MAPE"]
+      #mapeRL = accuracy(treinoTesteSangue, mdlTreinoSangueTotalRL$fitted.values)["Test set", "MAPE"]
+      #Encontra o menor MAPE
+      #melhor_Mape = min(mape_Ets, mape_Arima, mapeRL)
+      
+      #Armazena o melhor modelo na variável
+      #melhorModelo <- ifelse(melhor_Mape == mape_Ets, prevTreinoSangueTotalSTFL,
+      #ifelse(melhor_Mape == mape_Arima, mdlTreinoSangueTotalArima,mdlTreinoSangueTotalRL))
+    })
     ########################## OBTER DATAS USUARIO #############################
     start_date <- as.yearmon(input$datesSangueTotal[1])
     end_date <- as.yearmon(input$datesSangueTotal[2])
@@ -184,7 +201,7 @@ server <- function(input, output) {
     prevTreinoSangueAfereseSTFL = stlf(treinoAfereseTotal, h = TotalMesesTeste)
     
     ################################# GRAFICOS #################################
-    #GRAFICO DADOS E PREVISAO SANGUE TOTAL 
+    #GRAFICO DADOS E PREVISAO SANGUE TOTAL
     previsaoTotal <- prevTreinoSangueTotalSTFL$mean
     dados_e_previsao <- cbind(sangueTotalFiltro, previsaoTotal)
     dados_e_previsao_filtered <-
