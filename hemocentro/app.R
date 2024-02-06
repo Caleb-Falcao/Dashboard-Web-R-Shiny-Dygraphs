@@ -8,7 +8,7 @@
 # install.packages("shinyWidgets")
 
 ################BIBLIOTECAS UTILIZADAS##########################################
-#zoo: Reestruturar serie temporal irregular, a partir de modelos genericos
+#zoo:Infrastructure for Regular and Irregular Time Series (Z'sOrdered Observations)
 library(zoo)
 library(readxl)
 library(shiny)
@@ -21,6 +21,7 @@ library(dygraphs)
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 dados_total <-
   read_excel("dados_sangue.xlsx", sheet = "total", col_names = FALSE)
+
 mytsTotal <-
   ts(
     dados_total,
@@ -28,8 +29,10 @@ mytsTotal <-
     end = c(2022, 12),
     frequency = 12
   )
+
 dados_aferese <-
   read_excel("dados_sangue.xlsx", sheet = "aferese", col_names = FALSE)
+
 mytsaferese <-
   ts(
     dados_aferese,
@@ -150,28 +153,31 @@ server <- function(input, output){
     #BTN RECALCULAR MAPE
     observeEvent(input$res_btn_modelo,{
       ########################### MAPE MODELOS###################################
-      
       #CRIAÇÃO DOS MODELOS    
       
       #MODELO ETS(SUAVIZAÇÃO EXPONENCIAL
-      #prevSTLFSangueTotal = stlf(treinoTesteSangue, h = TotalMesesTeste)
+      prevSTLFSangueTotal = stlf(treinoTesteSangue, h = TotalMesesTeste)
       # MODELO ARIMA 
       
-      #mdlTreinoSangueTotalArima = auto.arima(treinoTesteSangue, trace=T,stepwise = F, approximation = F)
+      mdlTreinoSangueTotalArima = auto.arima(treinoTesteSangue, trace=T,stepwise = F, approximation = F)
       #MODELO REGRESSÃO LINEAR
-      #mdlTreinoSangueTotalRL = tslm(treinoTesteSangue ~ season + trend, data=treinoTesteSangue)
+      mdlTreinoSangueTotalRL = tslm(treinoTesteSangue ~ season + trend, data=treinoTesteSangue)
       
       #QUANTO MENOR O MAPE, MELHOR!
-      #mape_Ets = accuracy(treinoTesteSangue, prevSTLFSangueTotal$model$fitted)["Test set", "MAPE"]
+      #mape_Ets = accuracy(prevSTLFSangueTotal$model$fitted, treinoTesteSangue )["Test set", "MAPE"]
       #mape_Arima = accuracy(treinoTesteSangue, mdlTreinoSangueTotalArima$fitted)["Test set", "MAPE"]
       #mapeRL = accuracy(treinoTesteSangue, mdlTreinoSangueTotalRL$fitted.values)["Test set", "MAPE"]
       
       #ENCONTRAR MENOR MAPE
-      #melhor_Mape = min(mape_Ets, mape_Arima, mapeRL)
+      melhor_Mape = min(mape_Ets, mape_Arima, mapeRL)
       
       #ARMAZENAR MELHOR MODELO NA VARIAVEL
-      #melhorModelo <- ifelse(melhor_Mape == mape_Ets, prevTreinoSangueTotalSTFL,
-      #ifelse(melhor_Mape == mape_Arima, mdlTreinoSangueTotalArima,mdlTreinoSangueTotalRL))
+      melhorModelo <- ifelse(melhor_Mape == mape_Ets, prevTreinoSangueTotalSTFL,
+      ifelse(melhor_Mape == mape_Arima, mdlTreinoSangueTotalArima,mdlTreinoSangueTotalRL))
+      
+      #melhorModelo$model
+      #autoplot(melhorModelo)
+      # Plotar a série temporal original
     })
     
     ########################## OBTER DATAS USUARIO #############################
