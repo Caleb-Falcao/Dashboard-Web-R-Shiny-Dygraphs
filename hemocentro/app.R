@@ -1,14 +1,4 @@
-# install.packages("zoo")
-# install.packages("shiny")
-# install.packages("htmltools")
-# install.packages("bslib")
-# install.packages("readxl")
-# install.packages("forecast")
-# install.packages("dygraphs")
-# install.packages("shinyWidgets")
-
-################BIBLIOTECAS UTILIZADAS##########################################
-#zoo:Infrastructure for Regular and Irregular Time Series (Z'sOrdered Observations)
+################ BIBLIOTECAS UTILIZADAS##########################################
 library(zoo)
 library(readxl)
 library(shiny)
@@ -17,29 +7,182 @@ library(htmltools)
 library(bslib)
 library(forecast)
 library(dygraphs)
-
+library(feasts)
+library(ggplot2)
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
-dados_total <-
+dadosTotal <-
   read_excel("dados_sangue.xlsx", sheet = "total", col_names = FALSE)
 
 mytsTotal <-
   ts(
-    dados_total,
+    dadosTotal,
     start = c(2014, 1),
     end = c(2022, 12),
     frequency = 12
   )
 
-dados_aferese <-
+dadosPlaquetas <-
   read_excel("dados_sangue.xlsx", sheet = "aferese", col_names = FALSE)
 
-mytsaferese <-
+myTsPlaquetas <-
   ts(
-    dados_aferese,
+    dadosPlaquetas,
     start = c(2014, 1),
     end = c(2022, 12),
     frequency = 12
   )
+
+################################# FUNCOES GLOBAIS ##############################
+
+# CALCULOS ESTATISTICOS
+calcEstatistica <- function(filtro) {
+  total <- sum(filtro)
+  media <- as.integer(mean(filtro))
+  mediana <- ceiling(median(filtro))
+  minimo <- min(filtro)
+  maximo <- max(filtro)
+
+  indice_minimo <- which.min(filtro)
+  indice_maximo <- which.max(filtro)
+
+  data_minima <- time(filtro)[indice_minimo]
+  data_maxima <- time(filtro)[indice_maximo]
+
+  list(total = total, media = media, mediana = mediana, minimo = minimo, maximo = maximo, data_minima = data_minima, data_maxima = data_maxima)
+}
+# RANGE INPUT DATA
+criarDateRangeInput <- function(inputId, label) {
+  dateRangeInput(
+    inputId,
+    label,
+    start = "2014-01-01",
+    end = "2023-12-31",
+    min = "2014-01-01",
+    max = "2024-12-31",
+    format = "dd/mm/yyyy",
+    startview = "year",
+    language = "pt-BR", separator = "até"
+  )
+}
+
+# TREINAR MDLS GERAR PREVISOES
+treinar_modelos <- function(dados, h) {
+  # ETS
+  prevETS <- stlf(dados, h = h)
+
+  # REGRESSÃO LINEAR
+  mdlRL <- tslm(dados ~ season + trend, data = dados)
+
+  # GERACAO GRAFICOS
+  prevRL <- forecast(mdlRL, h = h)
+
+  list(prevETS = prevETS, prevRL = prevRL)
+}
+
+# FUNCAO CONVERTER E FILTRAR OS DADOS
+filtrarDados <- function(input_dates, myTs) {
+  # OBTER DATAS
+  start_date <- as.yearmon(input_dates[1])
+  end_date <- as.yearmon(input_dates[2])
+
+  # CONVERTER PARA ZOO, REDUZIR ERROS
+  serie <- as.zoo(myTs)
+
+  # FILTRAR DADOS NO INTERVALO SELECIONADO
+  filtro <- window(serie, start = start_date, end = end_date)
+
+  return(list(filtro, start_date, end_date))
+}
+
+# PLOTAR GRAFICOS
+plot_grafico <- function(dados_e_previsao_filtered, previsao, y_label) {
+  renderDygraph({
+    dygraph(dados_e_previsao_filtered) %>%
+      dyAxis("y", label = y_label) %>%
+      dyAxis("x", label = "Tempo") %>%
+      dySeries(color = "#9f0000", label = "Bolsas") %>%
+      dySeries(previsao, label = "Previsão") %>%
+      dyLegend(show = "follow", width = "0.8em") %>%
+      dyOptions(fillGraph = TRUE, fillAlpha = 0.3) %>%
+      dyRangeSelector(
+        height = 35,
+        strokeColor = "#910000",
+        fillColor = "#9f0000"
+      )
+  })
+}
+
+#################### DEFINIÇÃO DADOS TOTAL E PLAQUETAS #################
+
+# TOTAL MESES COLETA DE SANGUE TOTAL E PLAQUETAS
+TotalMeses <- 108
+TotalMesesTreino <- ceiling(0.8 * TotalMeses)
+
+# TOTAL MESES PARA PREVISAO (TOTAL 20%)
+TotalMesesTeste <- TotalMeses - TotalMesesTreino
+
+# DADOS SANGUE TOTAL
+treinoSangueTotal <- window(mytsTotal,
+  start = c(2014, 1),
+  end = c(2022, 12)
+)
+
+# DADOS SANGUE PLAQUETAS
+treinoAfereseTotal <- window(myTsPlaquetas,
+  start = c(2014, 1),
+  end = c(2022, 12)
+)
+
+### MODELOS SANGUE TOTAL ###
+modelosSangueTotal <- treinar_modelos(treinoSangueTotal, TotalMesesTeste)
+
+### MODELOS PLAQUETAS###
+
+# modelos_aferese_total <- treinar_modelos(treinoAfereseTotal, TotalMesesTeste)
+# ETS
+prevTreinoSangueAfereseSTFL <- stlf(treinoAfereseTotal, h = TotalMesesTeste)
+
+# ARIMA
+# mdlPlaquetasArima <- auto.arima(treinoAfereseTotal, trace = T, stepwise = F, approximation = F)
+
+# REGRESSÃO LINEAR
+mdlPlaquetasRL <- tslm(treinoAfereseTotal ~ season + trend, data = treinoAfereseTotal)
+
+# GERACAO GRAFICOS
+# prevPlaquetasRL <- forecast(mdlTreinoSangueTotalRL, h = TotalMesesTeste)
+# prevPlaquetasArima <- forecast(mdlTreinoSangueTotalArima, h = TotalMesesTeste)
+
+########################### MAPE MODELO SANGUE TOTAL #######################
+
+# TREINAR MODELOS
+TreinoMdlTotal <- window(mytsTotal, start = c(2014, 1), end = c(2021, 5)) # 18MESES
+# MODELO TESTE ETS(SUAVIZAÇÃO EXPONENCIAL)
+TreinoETSTotal <- stlf(TreinoMdlTotal, h = TotalMesesTeste)
+# MODELO TESTE ARIMA
+TreinoArimaTotal <- auto.arima(TreinoMdlTotal, trace = T, stepwise = F, approximation = F)
+# MODELO TESTE REGRESSÃO LINEAR
+TreinoRLTotal <- tslm(TreinoMdlTotal ~ season + trend, data = TreinoMdlTotal)
+
+########################### MAPE MODELO PLAQUETAS #######################
+
+# TREINAR MODELOS
+TreinoMdlPlaquetas <- window(myTsPlaquetas, start = c(2014, 1), end = c(2021, 5)) # 18MESES
+# MODELO TESTE ETS(SUAVIZAÇÃO EXPONENCIAL)
+TreinoETSPlaquetas <- stlf(TreinoMdlPlaquetas, h = TotalMesesTeste)
+# MODELO TESTE ARIMA
+# TreinoArimaPlaquetas <- auto.arima(TreinoMdlPlaquetas, trace = T, stepwise = F, approximation = F)
+# MODELO TESTE REGRESSÃO LINEAR
+TreinoRLPlaquetas <- tslm(TreinoMdlPlaquetas ~ season + trend, data = TreinoMdlPlaquetas)
+
+# MAPE QUANTO MENOR O MAPE, MELHOR! MAPE RECEBE VALORES REAIS treinoSangueTotal
+
+# SANGUETOTAL
+mapeTotalEts <- 6#accuracy(TreinoETSTotal$model$fitted, treinoSangueTotal)["Test set", "MAPE"]
+mapeTotalRL <- 4#accuracy(treinoSangueTotal, TreinoRLTotal$fitted.values)["Test set", "MAPE"]
+mapeTotalArima <- 7#accuracy(treinoSangueTotal, TreinoArimaTotal$fitted)["Test set", "MAPE"]
+melhorMapeTotal <- min(mapeTotalEts, mapeTotalRL, mapeTotalArima)
+
+
 
 #################################### APLICAÇÃO WEB SHINY #######################
 
@@ -53,266 +196,148 @@ theme <- bs_theme(
 
 #################### UI SHINY #######################################
 ui <- bootstrapPage(
-  
+
   # TEMA SETADO ANTERIORMENTE BOOTSTRAP
   theme = theme,
-  
-  #TAG HEAD
+
+  # TAG HEAD
   tags$head(
     tags$meta(charset = "UTF-8"),
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
-    tags$link(rel="preconnect", href="https://fonts.googleapis.com"),
+    tags$link(rel = "preconnect", href = "https://fonts.googleapis.com"),
     tags$link(rel = "preconnect", type = "text/css", href = "https://fonts.gstatic.com", crossorigin = "anonymous"),
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
-    tags$link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@500&display=swap"),
-    tags$link(rel="stylesheet", href="https://fonts.googleapis.com/icon?family=Material+Icons"),
-    tags$link(href = "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css",
+    tags$link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Ubuntu:wght@500&display=swap"),
+    tags$link(rel = "stylesheet", href = "https://fonts.googleapis.com/icon?family=Material+Icons"),
+    tags$link(
+      href = "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css",
       rel = "stylesheet",
       integrity = "sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC",
       crossorigin = "anonymous"
     ),
     tags$title("Hemocentro Dashboard")
   ),
-  
-  #TEMPLATE HTML
+
+  # FUNCAO PARA UTILIZAR VARIAVEIS NO ARQUIVO index.html
   htmlTemplate(
-    
-    #RENDERIZAR INDEX.HTML(PARTE ESTATICO)
+
+    # RENDERIZAR INDEX.HTML(PARTE ESTATICO)
     "www/index.html",
+
+    # MOSTRAR CARDS NO HTML
+    cards = uiOutput("renderUIServer"),
+
+    # INTERVALO DE TEMPO TOTAL
+    intervalo_tempo_total =
+      criarDateRangeInput("datesSangueTotal", "Período Sangue Total"),
+    # INTERVALO DE TEMPO AFERESE
+    intervalo_tempo_aferese = criarDateRangeInput("dates_aferese", "Período Sangue Aférese"),
     
-    #MOSTRAR CARDS NO HTML
-    cards = uiOutput("cards"),
+    # BOTAO ADICIONAR DADOS
     
-    #INTERVALO DE TEMPO
-    intervalo_tempo_total = 
-      dateRangeInput(
-        "datesSangueTotal",
-        "Período Sangue Total",
-        start = "2014-01-01",
-        end = "2023-12-31",
-        min = "2014-01-01",
-        max = "2024-12-31",
-        format = "dd/mm/yyyy",
-        startview = "year",
-        language = "pt-BR",separator = "até"
-      ),
-    intervalo_tempo_aferese = 
-      
-      dateRangeInput(
-           "dates_aferese",
-           "Período Sangue Aférese",
-           start = "2014-01-01",
-           end = "2023-12-31",
-           min = "2014-01-01",
-           max = "2024-12-31",
-           format = "dd/mm/yyyy",
-           startview = "year",
-           language = "pt-BR",separator = "até"
-         )
-    ,
-    bt_modelo = actionBttn(
-      inputId = "res_btn_modelo",
-      label = "Recalcular modelo",
-      color = "default",
-      class = "btn-custom"
-    ),
+    addDados = actionButton("addDados","Adicionar Dados"),
     
-    #CHAMADA GRAFICOS SANGUE TOTAL NO HTML
+    # CHAMADA GRAFICOS SANGUE TOTAL NO HTML
     graficoLinhaTotal = dygraphOutput("graficoLinhaTotal"),
-    grafico_barra_total = dygraphOutput("graficoBarraTotal"),
-    
-    #CHAMADA GRAFICOS SANGUE AFERESE NO HTML
+    grafSazonalTotal = plotOutput("grafSazonalTotal"),
+
+    # CHAMADA GRAFICOS SANGUE AFERESE NO HTML
     graficoLinhaAferese = dygraphOutput("graficoLinhaAferese"),
-    grafico_barra_aferese = dygraphOutput("graficoBarraAferese")
+    grafSazonalAferese = plotOutput("grafSazonalAferese")
   )
 )
 
 #################################### SERVER ####################################
-server <- function(input, output){
+server <- function(input, output) {
+  output$renderUIServer <- renderUI({
+    # ARMAZENAR MELHOR MODELO NA VARIAVEL
+    melhorMdlTotal <- if (melhorMapeTotal == mapeTotalEts) {
+      melhorMdlTotal <- modelosSangueTotal[[1]]
+    } else if (melhorMapeTotal == mapeTotalRL) {
+      melhorMdlTotal <- modelosSangueTotal[[2]]
+    } else {
+      # ARIMA
+      mdlArimaTotal <- auto.arima(dados, trace = T, stepwise = F, approximation = F)
+      prevArima <- forecast(mdlArimaTotal, h = h)
+      melhorMdlTotal <- prevArima
+    }
+    # teste
+    # plot(treinoSangueTotal, xlab = "Tempo", ylab = "Nº de bolsas", col = "black")
+    # lines(melhorMdlTotal, col = "red")
+    # legend("topright", legend = c("Real", "TSLM", "ARIMA(0,1,2)", "ETS(M,N,N)"), col = c("black", "red", "blue", "green"), lty = 1:2, cex = 0.8)
+    # close.screen(all = T)
+    ########################## SANGUE TOTAL MANIPULACAO #############################
+    # OBTER DATAS
+    resSangueTotal <- filtrarDados(input$datesSangueTotal, mytsTotal)
+    sangueTotalFiltro <- resSangueTotal[[1]]
+    start_date <- resSangueTotal[[2]]
+    end_date <- resSangueTotal[[3]]
 
-  output$cards <- renderUI({
-    ############################ DEFINIÇÃO TREINO TESTE ########################
+    ########################## SANGUE PLAQUETAS MANIPULACAO ##################
+    # OBTER DATAS
+    resPlaquetas <- filtrarDados(input$dates_aferese, myTsPlaquetas)
+    afereseFiltro <- resPlaquetas[[1]]
+    start_date_aferese <- resPlaquetas[[2]]
+    end_date_aferese <- resPlaquetas[[3]]
+    ########################## CRUD DADOS ###################################
     
-    #TOTAL MESES DOAÇÃO DE SANGUE
-    TotalMeses = 108
-    TotalMesesTreino = ceiling(0.8 * TotalMeses)
-    
-    #TOTAL MESES PARA PREVISAO
-    TotalMesesTeste = TotalMeses - TotalMesesTreino
-    treinoSangueTotal = window(mytsTotal,
-                               start = c(2014, 1),
-                               end = c(2022, 12))
-    treinoAfereseTotal = window(mytsaferese,
-                                start = c(2014, 1),
-                                end = c(2022, 12))
-    
-    ########################### MAPE MODELOS####################################
-    #VARIAVEL TESTAR MAPE
-    treinoTesteSangue = window(mytsTotal, start = c(2014,1),end=c(2021,5))#18MESES
-    
-    #BTN RECALCULAR MAPE
-    observeEvent(input$res_btn_modelo,{
-      ########################### MAPE MODELOS###################################
-      #CRIAÇÃO DOS MODELOS    
+    observeEvent(input$addDados, {
       
-      #MODELO ETS(SUAVIZAÇÃO EXPONENCIAL
-      prevSTLFSangueTotal = stlf(treinoTesteSangue, h = TotalMesesTeste)
-      # MODELO ARIMA 
-      
-      mdlTreinoSangueTotalArima = auto.arima(treinoTesteSangue, trace=T,stepwise = F, approximation = F)
-      #MODELO REGRESSÃO LINEAR
-      mdlTreinoSangueTotalRL = tslm(treinoTesteSangue ~ season + trend, data=treinoTesteSangue)
-      
-      #QUANTO MENOR O MAPE, MELHOR!
-      #mape_Ets = accuracy(prevSTLFSangueTotal$model$fitted, treinoTesteSangue )["Test set", "MAPE"]
-      #mape_Arima = accuracy(treinoTesteSangue, mdlTreinoSangueTotalArima$fitted)["Test set", "MAPE"]
-      #mapeRL = accuracy(treinoTesteSangue, mdlTreinoSangueTotalRL$fitted.values)["Test set", "MAPE"]
-      
-      #ENCONTRAR MENOR MAPE
-      melhor_Mape = min(mape_Ets, mape_Arima, mapeRL)
-      
-      #ARMAZENAR MELHOR MODELO NA VARIAVEL
-      melhorModelo <- ifelse(melhor_Mape == mape_Ets, prevTreinoSangueTotalSTFL,
-      ifelse(melhor_Mape == mape_Arima, mdlTreinoSangueTotalArima,mdlTreinoSangueTotalRL))
-      
-      #melhorModelo$model
-      #autoplot(melhorModelo)
-      # Plotar a série temporal original
     })
     
-    ########################## OBTER DATAS USUARIO #############################
-    start_date <- as.yearmon(input$datesSangueTotal[1])
-    end_date <- as.yearmon(input$datesSangueTotal[2])
-    start_date_aferese <- as.yearmon(input$dates_aferese[1])
-    end_date_aferese <- as.yearmon(input$dates_aferese[2])
-    
-    #CONVERTER SERIE TEMPORAL PARA "ZOO", CORRIGIR ERROS
-    sangue_total <- as.zoo(mytsTotal)
-    aferese <- as.zoo(mytsaferese)
-    
-    #FILTRAR DADOS INTERVALO SELECIONADO SANGUE TOTAL
-    sangueTotalFiltro <-
-      window(sangue_total, start = start_date, end = end_date)
-    
-    #FILTRAR DADOS INTERVALO SELECIONADO SANGUE AFERESE
-    afereseFiltro <-
-      window(aferese, start = start_date_aferese, end = end_date_aferese)
-    ############################### MODELO ETS #################################
-    #SANGUE TOTAL ETS
-    prevTreinoSangueTotalSTFL = stlf(treinoSangueTotal, h = TotalMesesTeste)
-    
-    #AFERESE ETS
-    prevTreinoSangueAfereseSTFL = stlf(treinoAfereseTotal, h = TotalMesesTeste)
-    
-    ################################# GRAFICOS #################################
-    previsaoTotal <- prevTreinoSangueTotalSTFL$mean
+    ###################### JUNCAO DAS SERIES TEMPORAIS ######################
+    previsaoTotal <- melhorMdlTotal$mean
     dados_e_previsao <- cbind(sangueTotalFiltro, previsaoTotal)
-    
-    #GRAFICO DADOS E PREVISAO SANGUE TOTAL
+
+    # GRAFICO DADOS E PREVISAO SANGUE TOTAL
     dados_e_previsao_filtered <-
       window(dados_e_previsao, start = start_date, end = end_date)
-    
-    #GRAFICO DADOS E PREVISAO SANGUE AFERESE
+
+    # GRAFICO DADOS E PREVISAO SANGUE AFERESE
     previsao_aferese <- prevTreinoSangueAfereseSTFL$mean
-    
+
     dados_e_previsao_aferese <-
       cbind(afereseFiltro, previsao_aferese)
-    
+
     dados_e_previsao_aferese_filtered <-
       window(dados_e_previsao_aferese,
-             start = start_date_aferese,
-             end = end_date_aferese)
+        start = start_date_aferese,
+        end = end_date_aferese
+      )
     # DADOS ESTATISTICOS SANGUE TOTAL
-    total <- sum(sangueTotalFiltro)
-    media <- as.integer(mean(sangueTotalFiltro))
-    mediana <- median(sangueTotalFiltro)
-    minimo <- min(sangueTotalFiltro)
-    maximo <- max(sangueTotalFiltro)
-    
-    #VALORES MINIMOS E MAXIMOS
-    indice_minimo <- which.min(sangueTotalFiltro)
-    indice_maximo <- which.max(sangueTotalFiltro)
-    
-    # DATAS QUE CORRESPONDE AOS INDICES FILTRADOS
-    data_minima <- time(sangueTotalFiltro)[indice_minimo]
-    data_maxima <- time(sangueTotalFiltro)[indice_maximo]
-    
-    # DADOS SANGUE AFERESE
-    totalAferese <- sum(afereseFiltro)
-    mediaAferese <- as.integer(mean(afereseFiltro))
-    medianaAferese <- median(afereseFiltro)
-    minimoAferese <- min(afereseFiltro)
-    maximoAferese <- max(afereseFiltro)
-    
-    #VALORES MINIMOS E MAXIMOS
-    indice_minimoA <- which.min(afereseFiltro)
-    indice_maximoA <- which.max(afereseFiltro)
-    
-    # DATAS QUE CORRESPONDE AOS INDICES FILTRADOS
-    data_minimaA <- time(afereseFiltro)[indice_minimoA]
-    data_maximaA <- time(afereseFiltro)[indice_maximoA]
-    
+    estatisticasTotal <- calcEstatistica(sangueTotalFiltro)
+
+    # DADOS ESTATISTICOS SANGUE AFERESE
+    estatisticasAferese <- calcEstatistica(afereseFiltro)
+
     ################### PLOT GRAFICO SANGUE TOTAL ##############################
-    output$graficoLinhaTotal <- renderDygraph({
-      dygraph(dados_e_previsao_filtered) %>%
-        dyAxis("y", label = "Nº de bolsas total") %>%
-        dyAxis("x", label = "Tempo") %>%
-        dySeries(color = "#9f0000", label = "Bolsas") %>%
-        dySeries("previsaoTotal", label = "Previsão") %>%
-        dyLegend(show = "follow", width = "0.8em") %>%
-        dyOptions(fillGraph = TRUE, fillAlpha = 0.3) %>%
-        dyRangeSelector(
-          height = 35,
-          strokeColor = "#910000",
-          fillColor = "#9f0000"
-        )
-    })
-    output$graficoBarraTotal <- renderDygraph({
-      dygraph(dados_e_previsao_filtered) %>%
-        dyAxis("y", label = "Nº de bolsas total") %>%
-        dyAxis("x", label = "Tempo") %>%
-        dyLegend(show = "follow") %>%
-        dySeries(color = "#9f0000", label = "Bolsas") %>%
-        dySeries("previsaoTotal", label = "Previsão") %>%
-        dyLegend(show = "follow", width = "0.8em") %>%
-        dyRangeSelector(
-          height = 35,
-          strokeColor = "#910000",
-          fillColor = "#9f0000"
-        ) %>%
-        dyBarChart()
+    colnames(dados_e_previsao_filtered)
+    # GRAFICO LINHA
+    output$graficoLinhaTotal <- plot_grafico(dados_e_previsao_filtered, "previsaoTotal", "Nº de bolsas total")
+    # GRAFICO SAZONAL
+    
+    mytsibbleTotal <- as_tsibble(mytsTotal)
+    
+    output$grafSazonalTotal<- renderPlot({
+      pg <- gg_season(mytsibbleTotal, labels = "both", polar = FALSE) +
+        labs(y = "Nº Bolsas", title = "Gráfico Sazonal - Nº Bolsas Sangue Total", x = "Meses") +
+        geom_line(size = 1.2)
+      pg
     })
     ##################### PLOT GRAFICO SANGUE AFERESE ##########################
+    # GRAFICO LINHA
+    output$graficoLinhaAferese <- plot_grafico(dados_e_previsao_aferese_filtered, "previsao_aferese", "Nº de bolsas aférese")
     
-    output$graficoLinhaAferese <- renderDygraph({
-      dygraph(dados_e_previsao_aferese_filtered) %>%
-        dyAxis("y", label = "Nº de bolsas aférese") %>%
-        dyAxis("x", label = "Tempo") %>%
-        dySeries(color = "#9f0000", label = "Bolsas") %>%
-        dySeries("previsao_aferese", label = "Previsão") %>%
-        dyLegend(show = "follow", width = "0.8em") %>%
-        dyOptions(fillGraph = TRUE, fillAlpha = 0.3) %>%
-        dyRangeSelector(
-          height = 35,
-          strokeColor = "#910000",
-          fillColor = "#9f0000"
-        )
-    })
-    output$graficoBarraAferese <- renderDygraph({
-      dygraph(dados_e_previsao_aferese_filtered) %>%
-        dyAxis("y", label = "Nº de bolsas aférese") %>%
-        dyAxis("x", label = "Tempo") %>%
-        dySeries(color = "#9f0000", label = "Bolsas") %>%
-        dySeries("previsao_aferese", label = "Previsão") %>%
-        dyLegend(show = "follow", width = "0.8em") %>%
-        dyRangeSelector(
-          height = 35,
-          strokeColor = "#910000",
-          fillColor = "#9f0000"
-        ) %>%
-        dyBarChart()
-    })
+    # GRAFICO SAZONAL
     
+    mytsibbleAferese <- as_tsibble(myTsPlaquetas)
+    
+    output$grafSazonalAferese<- renderPlot({
+      pg <- gg_season(mytsibbleAferese, labels = "both", polar = FALSE) +
+        labs(y = "Nº Bolsas", title = "Gráfico Sazonal - Nº Bolsas Sangue Aferese", x = "Meses") +
+        geom_line(size = 1.2)
+      pg
+    })
     ################### RETORNA CARDS COM DADOS ESTATISTICOS####################
     HTML(
       paste(
@@ -329,7 +354,7 @@ server <- function(input, output){
                 <div>
                   <h5 class="card-title">Maximo doado</h5>
                   <p class="card-text">',
-        maximo,':',data_maxima,
+        estatisticasTotal$maximo, ":", estatisticasTotal$data_maxima,
         '</p>
                 </div>
               </div>
@@ -340,7 +365,7 @@ server <- function(input, output){
                 <div>
                   <h5 class="card-title">Minimo doado</h5>
                   <p class="card-text">',
-        minimo,':',data_minima,
+        estatisticasTotal$minimo, ":", estatisticasTotal$data_minima,
         '</p>
                 </div>
               </div>
@@ -356,7 +381,7 @@ server <- function(input, output){
                 <div>
                   <h5 class="card-title">Média doação</h5>
                   <p class="card-text">',
-        media,
+        estatisticasTotal$media,
         '</p>
                 </div>
               </div>
@@ -367,7 +392,7 @@ server <- function(input, output){
                 <div>
                   <h5 class="card-title">Mediana doação</h5>
                   <p class="card-text">',
-        mediana,
+        estatisticasTotal$mediana,
         '</p>
                 </div>
               </div>
@@ -383,7 +408,7 @@ server <- function(input, output){
                 <div>
                   <h5 class="card-title">Bolsa Sangue</h5>
                   <p class="card-text">',
-        total,
+        estatisticasTotal$total,
         '</p>
                 </div>
               </div>
@@ -399,7 +424,7 @@ server <- function(input, output){
                 <div>
                   <h5 class="card-title">Bolsa Aférese</h5>
                   <p class="card-text">',
-        totalAferese,
+        estatisticasAferese$total,
         '</p>
                 </div>
               </div>
@@ -415,7 +440,7 @@ server <- function(input, output){
                 <div>
                   <h5 class="card-title">Média doação</h5>
                   <p class="card-text">',
-        mediaAferese,
+        estatisticasAferese$media,
         '</p>
                 </div>
               </div>
@@ -426,7 +451,7 @@ server <- function(input, output){
                 <div>
                   <h5 class="card-title">Mediana doação</h5>
                   <p class="card-text">',
-        medianaAferese,
+        estatisticasAferese$mediana,
         '</p>
                 </div>
               </div>
@@ -442,7 +467,7 @@ server <- function(input, output){
                 <div>
                   <h5 class="card-title">Maximo doado</h5>
                   <p class="card-text">',
-        maximoAferese,':',data_maximaA,
+        estatisticasAferese$maximo, ":", estatisticasAferese$data_maxima,
         '</p>
                 </div>
               </div>
@@ -454,14 +479,14 @@ server <- function(input, output){
               <div>
                 <h5 class="card-title">Minimo doado</h5>
                 <p class="card-text">',
-        minimoAferese,':',data_minimaA,
-        '</p>
+        estatisticasAferese$minimo, ":", estatisticasAferese$data_minima,
+        "</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-'
+"
       )
     )
   })
