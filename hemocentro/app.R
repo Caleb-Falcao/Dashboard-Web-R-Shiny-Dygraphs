@@ -11,7 +11,7 @@ library(feasts)
 library(ggplot2)
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 dadosTotal <-
-  read_excel("dados_sangue.xlsx", sheet = "total", col_names = FALSE)
+  read_excel("dados_sangue_2022.xlsx", sheet = "total", col_names = FALSE)
 
 mytsTotal <-
   ts(
@@ -21,8 +21,11 @@ mytsTotal <-
     frequency = 12
   )
 
+print(paste("Sangue total: ",summary(mytsTotal)))
+
+
 dadosPlaquetas <-
-  read_excel("dados_sangue.xlsx", sheet = "aferese", col_names = FALSE)
+  read_excel("dados_sangue_2022.xlsx", sheet = "aferese", col_names = FALSE)
 
 myTsPlaquetas <-
   ts(
@@ -31,13 +34,15 @@ myTsPlaquetas <-
     end = c(2022, 12),
     frequency = 12
   )
-
+print(paste("Sangue aferese: ",summary(myTsPlaquetas)))
 ################################# FUNCOES GLOBAIS ##############################
 
 # CALCULOS ESTATISTICOS
 calcEstatistica <- function(filtro) {
+  ts <- summary(filtro)
+  #print(ts)
   total <- sum(filtro)
-  media <- as.integer(mean(filtro))
+  media <- ceiling(mean(filtro))
   mediana <- ceiling(median(filtro))
   minimo <- min(filtro)
   maximo <- max(filtro)
@@ -132,56 +137,67 @@ treinoAfereseTotal <- window(myTsPlaquetas,
   start = c(2014, 1),
   end = c(2022, 12)
 )
-
-### MODELOS SANGUE TOTAL ###
+########################PAREI AQUIIIIIIIIIIIIIIIIIIIIIIII
+### MODELOS 2014,1 - 2022, 12 SANGUE TOTAL ###
 modelosSangueTotal <- treinar_modelos(treinoSangueTotal, TotalMesesTeste)
 
-### MODELOS PLAQUETAS###
+### MODELOS 2014,1 - 2022, 12 SANGUE AFERESE ###
 
-# modelos_aferese_total <- treinar_modelos(treinoAfereseTotal, TotalMesesTeste)
-# ETS
-prevTreinoSangueAfereseSTFL <- stlf(treinoAfereseTotal, h = TotalMesesTeste)
-
-# ARIMA
-# mdlPlaquetasArima <- auto.arima(treinoAfereseTotal, trace = T, stepwise = F, approximation = F)
-
-# REGRESSÃO LINEAR
-mdlPlaquetasRL <- tslm(treinoAfereseTotal ~ season + trend, data = treinoAfereseTotal)
-
-# GERACAO GRAFICOS
-# prevPlaquetasRL <- forecast(mdlTreinoSangueTotalRL, h = TotalMesesTeste)
-# prevPlaquetasArima <- forecast(mdlTreinoSangueTotalArima, h = TotalMesesTeste)
+modelosAfereseTotal <- treinar_modelos(treinoAfereseTotal, TotalMesesTeste)
 
 ########################### MAPE MODELO SANGUE TOTAL #######################
 
-# TREINAR MODELOS
+#MODELOS DE TREINO 2014,1 - 2021, 5 SANGUE TOTAL ###
 TreinoMdlTotal <- window(mytsTotal, start = c(2014, 1), end = c(2021, 5)) # 18MESES
-# MODELO TESTE ETS(SUAVIZAÇÃO EXPONENCIAL)
-TreinoETSTotal <- stlf(TreinoMdlTotal, h = TotalMesesTeste)
-# MODELO TESTE ARIMA
-TreinoArimaTotal <- auto.arima(TreinoMdlTotal, trace = T, stepwise = F, approximation = F)
-# MODELO TESTE REGRESSÃO LINEAR
-TreinoRLTotal <- tslm(TreinoMdlTotal ~ season + trend, data = TreinoMdlTotal)
+MapeMdlTotal <- window(mytsTotal, start = c(2021, 6), end = c(2022, 12)) # 18MESES
+#print()
+print(class(MapeMdlTotal))
+#TesteMape
+modeloTesteTotal = treinar_modelos(TreinoMdlTotal, TotalMesesTeste)
 
-########################### MAPE MODELO PLAQUETAS #######################
+print(class(modeloTesteTotal[[2]]))
 
-# TREINAR MODELOS
-TreinoMdlPlaquetas <- window(myTsPlaquetas, start = c(2014, 1), end = c(2021, 5)) # 18MESES
-# MODELO TESTE ETS(SUAVIZAÇÃO EXPONENCIAL)
-TreinoETSPlaquetas <- stlf(TreinoMdlPlaquetas, h = TotalMesesTeste)
-# MODELO TESTE ARIMA
-# TreinoArimaPlaquetas <- auto.arima(TreinoMdlPlaquetas, trace = T, stepwise = F, approximation = F)
-# MODELO TESTE REGRESSÃO LINEAR
-TreinoRLPlaquetas <- tslm(TreinoMdlPlaquetas ~ season + trend, data = TreinoMdlPlaquetas)
+#accuracy(MapeMdlTotal, prevTreinoSangueTotalArima$mean)
+#accuracy(MapeMdlTotal, prevTreinoSangueTotalSTFL$mean)
 
-# MAPE QUANTO MENOR O MAPE, MELHOR! MAPE RECEBE VALORES REAIS treinoSangueTotal
+# TreinoArimaTotal <- auto.arima(TreinoMdlTotal, trace = T, stepwise = F, approximation = F)
 
-# SANGUETOTAL
-mapeTotalEts <- 6#accuracy(TreinoETSTotal$model$fitted, treinoSangueTotal)["Test set", "MAPE"]
+# NIVEL DE ERRO MAPE (QUANTO MENOR MELHOR O MODELO)
+mapeTotalEts <- forecast::accuracy(modeloTesteTotal[[2]], MapeMdlTotal)["Test set", "MAPE"]
 mapeTotalRL <- 4#accuracy(treinoSangueTotal, TreinoRLTotal$fitted.values)["Test set", "MAPE"]
 mapeTotalArima <- 7#accuracy(treinoSangueTotal, TreinoArimaTotal$fitted)["Test set", "MAPE"]
 melhorMapeTotal <- min(mapeTotalEts, mapeTotalRL, mapeTotalArima)
 
+
+########################### MAPE MODELO PLAQUETAS #######################
+
+#MODELOS DE TREINO 2014,1 - 2021, 5 SANGUE AFERESE ###
+TreinoMdlPlaquetas <- window(myTsPlaquetas, start = c(2014, 1), end = c(2021, 5)) # 18MESES
+#testarMDLPlaquetas <- window(myTsPlaquetas, start = c(2021, 6), end = c(2022, 12))
+modeloTestePlaquetas <- treinar_modelos(TreinoMdlPlaquetas, TotalMesesTeste)
+
+# MODELO TESTE ARIMA
+#TreinoArimaPlaquetas <- auto.arima(TreinoMdlPlaquetas, trace = T, stepwise = F, approximation = F)
+
+
+# NIVEL DE ERRO MAPE (QUANTO MENOR MELHOR O MODELO)
+# SANGUEPLAQUETAS
+#accuracy(modelo a ser testado, modelo real para o teste)
+
+#print(modeloTestePlaquetas[[1]])
+#str(modeloTestePlaquetas[[1]])
+# teste
+# plot(treinoAfereseTotal, xlab = "Tempo", ylab = "Nº de bolsas", col = "black")
+# lines(modeloTestePlaquetas[[1]], col = "red")
+# legend("topright", legend = c("Real", "TSLM", "ARIMA(0,1,2)", "ETS(M,N,N)"), col = c("black", "red", "blue", "green"), lty = 1:2, cex = 0.8)
+# close.screen(all = T)
+mapePlaquetasEts <- 5#forecast::accuracy(testarMDLPlaquetas, modeloTestePlaquetas[[1]]$model$fitted)["Test set", "MAPE"]
+mapePlaquetasRL <- 4#forecast::accuracy(testarMDLPlaquetas, modeloTestePlaquetas[[2]])["Test set", "MAPE"]
+mapePlaquetasArima <- 6#forecast::accuracy(testarMDLPlaquetas, TreinoArimaPlaquetas$fitted)["Test set", "MAPE"]
+melhorMapePlaquetas <- min(mapePlaquetasEts, mapePlaquetasRL, mapePlaquetasArima)
+#print(paste("ETS: "),mapePlaquetasEts)
+#print(paste("RL: "),mapePlaquetasRL)
+#print(paste("Arima: "),mapePlaquetasArima)
 
 
 #################################### APLICAÇÃO WEB SHINY #######################
@@ -250,16 +266,29 @@ ui <- bootstrapPage(
 #################################### SERVER ####################################
 server <- function(input, output) {
   output$renderUIServer <- renderUI({
-    # ARMAZENAR MELHOR MODELO NA VARIAVEL
-    melhorMdlTotal <- if (melhorMapeTotal == mapeTotalEts) {
+    # BUSCAR MELHOR MODELO SANGUE TOTAL
+    melhorMdlTotal <- if (melhorMapePlaquetas == mapeTotalEts) {
       melhorMdlTotal <- modelosSangueTotal[[1]]
-    } else if (melhorMapeTotal == mapeTotalRL) {
+    } else if (melhorMapePlaquetas == mapeTotalRL) {
       melhorMdlTotal <- modelosSangueTotal[[2]]
     } else {
       # ARIMA
-      mdlArimaTotal <- auto.arima(dados, trace = T, stepwise = F, approximation = F)
-      prevArima <- forecast(mdlArimaTotal, h = h)
-      melhorMdlTotal <- prevArima
+      mdlArimaTotal <- auto.arima(treinoSangueTotal, trace = T, stepwise = F, approximation = F)
+      prevArimaTotal <- forecast(mdlArimaTotal, h = TotalMesesTeste)
+      melhorMdlTotal <- prevArimaTotal
+    }
+    
+    # BUSCAR MELHOR MODELO SANGUE PLAQUETAS
+    
+    melhorMdlPlaquetas <- if (melhorMapeTotal == mapeTotalEts) {
+      melhorMdlPlaquetas <- modelosAfereseTotal[[1]]
+    } else if (melhorMapeTotal == mapeTotalRL) {
+      melhorMdlPlaquetas <- modelosAfereseTotal[[2]]
+    } else {
+       ARIMA
+      mdlArimaPlaquetas <- auto.arima(treinoAfereseTotal, trace = T, stepwise = F, approximation = F)
+      prevArimaPlaquetas <- forecast(mdlArimaPlaquetas, h = TotalMesesTeste)
+      melhorMdlPlaquetas <- prevArimaPlaquetas
     }
     # teste
     # plot(treinoSangueTotal, xlab = "Tempo", ylab = "Nº de bolsas", col = "black")
@@ -282,7 +311,21 @@ server <- function(input, output) {
     ########################## CRUD DADOS ###################################
     
     observeEvent(input$addDados, {
-      
+      showModal(modalDialog(
+        title = "Adicionar Doações de Sangue",
+        textInput("totalBags", "Total de Bolsas:"),
+        easyClose = FALSE,
+        footer = tagList(
+          modalButton("Fechar"),
+          actionButton("save", "Adicionar")
+        )
+      ))
+    })
+    
+    observeEvent(input$save, {
+      # Aqui você pode adicionar o código para salvar os dados em sua planilha xlsx
+      # Você pode acessar o valor inserido com input$totalBags
+      removeModal()
     })
     
     ###################### JUNCAO DAS SERIES TEMPORAIS ######################
@@ -294,7 +337,7 @@ server <- function(input, output) {
       window(dados_e_previsao, start = start_date, end = end_date)
 
     # GRAFICO DADOS E PREVISAO SANGUE AFERESE
-    previsao_aferese <- prevTreinoSangueAfereseSTFL$mean
+    previsao_aferese <- melhorMdlPlaquetas$mean
 
     dados_e_previsao_aferese <-
       cbind(afereseFiltro, previsao_aferese)
