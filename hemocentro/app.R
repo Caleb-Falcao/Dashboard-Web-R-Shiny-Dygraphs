@@ -387,8 +387,10 @@ server <- function(input, output) {
     
     output$grafSazonalTotal<- renderPlot({
       pg <- gg_season(mytsibbleTotal, labels = "both", polar = FALSE) +
-        labs(y = "Nº Bolsas", title = "Gráfico Sazonal - Nº Bolsas Sangue Total", x = "Meses") +
-        geom_line(size = 1.2)
+        labs(y = "Nº Bolsas", title = "", x = "Meses") +
+        geom_line(size = 1.2) +
+        theme(axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12))
       pg
     })
     ##################### PLOT GRAFICO SANGUE AFERESE ##########################
@@ -401,8 +403,10 @@ server <- function(input, output) {
     
     output$grafSazonalAferese<- renderPlot({
       pg <- gg_season(mytsibbleAferese, labels = "both", polar = FALSE) +
-        labs(y = "Nº Bolsas", title = "Gráfico Sazonal - Nº Bolsas Sangue Aferese", x = "Meses") +
-        geom_line(size = 1.2)
+        labs(y = "Nº Bolsas", title = "", x = "Meses") +
+        geom_line(size = 1.2) +
+        theme(axis.title = element_text(size = 14),
+              axis.text = element_text(size = 12))
       pg
     })
     ################### RETORNA CARDS COM DADOS ESTATISTICOS####################
