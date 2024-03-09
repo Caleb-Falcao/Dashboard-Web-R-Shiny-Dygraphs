@@ -270,7 +270,7 @@ ui <- bootstrapPage(
     
     addDados = actionButton("addDados","Adicionar Dados"),
     # MAPE
-    #mapeTotal = textOutput("mapeSangueTotal"),
+    mapeTotal = uiOutput("mapeSangueTotal"),
     # CHAMADA GRAFICOS SANGUE TOTAL NO HTML
     graficoLinhaTotal = dygraphOutput("graficoLinhaTotal"),
     grafSazonalTotal = plotOutput("grafSazonalTotal"),
@@ -283,6 +283,7 @@ ui <- bootstrapPage(
 
 #################################### SERVER ####################################
 server <- function(input, output) {
+  
   output$renderUIServer <- renderUI({
     # BUSCAR MELHOR MODELO SANGUE TOTAL
     melhorMdlTotal <- if (melhorMapeTotal == mapeTotalEts) {
@@ -347,10 +348,6 @@ server <- function(input, output) {
       # Você pode acessar o valor inserido com input$totalBags
       removeModal()
     })
-    ######################## MAPE ####################################
-    output$mapeSangueTotal -> renderText({
-      paste("funciona")
-    })
     
     ###################### JUNCAO DAS SERIES TEMPORAIS ######################
     previsaoTotal <- melhorMdlTotal$mean
@@ -376,7 +373,10 @@ server <- function(input, output) {
 
     # DADOS ESTATISTICOS SANGUE AFERESE
     estatisticasAferese <- calcEstatistica(afereseFiltro)
-
+    ######################## MAPE ####################################
+    output$mapeSangueTotal <- renderUI({
+      HTML(paste('<div id = mape class="row justify-content-center align-items-center g-2  d-flex justify-content-center">','<div class="col text-center">Erro Médio (MAPE): ', round(melhorMapeTotal, 2), '% / Erro aproximado em Nº de bolsas: ',round(((melhorMapeTotal*estatisticasTotal$media)/100),2),'</div> <div class="col text-center">Erro Médio (MAPE): ',round(melhorMapePlaquetas,2),'% / Erro aproximado em Nº de bolsas: ',round(((melhorMapePlaquetas*estatisticasTotal$media)/100),2),'</div></div>'))
+    })
     ################### PLOT GRAFICO SANGUE TOTAL ##############################
     colnames(dados_e_previsao_filtered)
     # GRAFICO LINHA
