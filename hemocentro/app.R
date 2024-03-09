@@ -21,7 +21,7 @@ mytsTotal <-
     frequency = 12
   )
 
-print(paste("Sangue total: ",summary(mytsTotal)))
+#print(paste("Sangue total: ",summary(mytsTotal)))
 
 
 dadosPlaquetas <-
@@ -34,7 +34,7 @@ myTsPlaquetas <-
     end = c(2022, 12),
     frequency = 12
   )
-print(paste("Sangue aferese: ",summary(myTsPlaquetas)))
+#print(paste("Sangue aferese: ",summary(myTsPlaquetas)))
 ################################# FUNCOES GLOBAIS ##############################
 
 # CALCULOS ESTATISTICOS
@@ -137,7 +137,7 @@ treinoAfereseTotal <- window(myTsPlaquetas,
   start = c(2014, 1),
   end = c(2022, 12)
 )
-########################PAREI AQUIIIIIIIIIIIIIIIIIIIIIIII
+
 ### MODELOS 2014,1 - 2022, 12 SANGUE TOTAL ###
 modelosSangueTotal <- treinar_modelos(treinoSangueTotal, TotalMesesTeste)
 
@@ -148,32 +148,44 @@ modelosAfereseTotal <- treinar_modelos(treinoAfereseTotal, TotalMesesTeste)
 ########################### MAPE MODELO SANGUE TOTAL #######################
 
 #MODELOS DE TREINO 2014,1 - 2021, 5 SANGUE TOTAL ###
-TreinoMdlTotal <- window(mytsTotal, start = c(2014, 1), end = c(2021, 5)) # 18MESES
-MapeMdlTotal <- window(mytsTotal, start = c(2021, 6), end = c(2022, 12)) # 18MESES
-#print()
-print(class(MapeMdlTotal))
-#TesteMape
+TreinoMdlTotal <- window(mytsTotal, start = c(2014, 1), end = c(2021, 2)) # 18MESES
+MapeMdlTotal <- window(mytsTotal, start = c(2021, 3), end = c(2022, 12)) # 18MESES
+#TESTE MAPE
 modeloTesteTotal = treinar_modelos(TreinoMdlTotal, TotalMesesTeste)
 
-print(class(modeloTesteTotal[[2]]))
-
-#accuracy(MapeMdlTotal, prevTreinoSangueTotalArima$mean)
-#accuracy(MapeMdlTotal, prevTreinoSangueTotalSTFL$mean)
-
-# TreinoArimaTotal <- auto.arima(TreinoMdlTotal, trace = T, stepwise = F, approximation = F)
-
+#TreinoArimaTotal <- auto.arima(TreinoMdlTotal, trace = T, stepwise = F, approximation = F)
+#prevTesteArimaTotal <- forecast(TreinoArimaTotal, h=TotalMesesTeste)
 # NIVEL DE ERRO MAPE (QUANTO MENOR MELHOR O MODELO)
-mapeTotalEts <- forecast::accuracy(modeloTesteTotal[[2]], MapeMdlTotal)["Test set", "MAPE"]
-mapeTotalRL <- 4#accuracy(treinoSangueTotal, TreinoRLTotal$fitted.values)["Test set", "MAPE"]
-mapeTotalArima <- 7#accuracy(treinoSangueTotal, TreinoArimaTotal$fitted)["Test set", "MAPE"]
-melhorMapeTotal <- min(mapeTotalEts, mapeTotalRL, mapeTotalArima)
+#ETS
+mapeTotalEts <- forecast::accuracy(modeloTesteTotal[[1]], MapeMdlTotal)["Test set", "MAPE"]
 
+#RL
+mapeTotalRL <- forecast::accuracy(modeloTesteTotal[[2]], MapeMdlTotal)["Test set", "MAPE"]
+
+#ARIMA
+#mapeTotalArima <- 20#forecast::accuracy(prevTesteArimaTotal, MapeMdlTotal)["Test set", "MAPE"]
+
+
+melhorMapeTotal <- min(mapeTotalEts, mapeTotalRL)
+#mapeTotalArima
+#############################TESTE NORMALIDADE SANGUE TOTAL####################
+# TESTE NORMALIDADE NOS RESÍDUOS SANGUE TOTAL
+shapiro.test(modeloTesteTotal[[1]]$residuals)
+shapiro.test(modeloTesteTotal[[2]]$residuals)
+# TESTE NORMALIDADE SANGUE TOTAL
+checkresiduals(modeloTesteTotal[[1]])
+checkresiduals(modeloTesteTotal[[2]])
+#checkresiduals(mapeTotalArima)
+print(paste("modelo ETS:",mapeTotalEts))
+print(paste("modelo RL:",mapeTotalRL))
+#print(paste("modelo ARIMA:",mapeTotalArima))
+print(paste("Melhor modelo Mape:", melhorMapeTotal))
 
 ########################### MAPE MODELO PLAQUETAS #######################
 
 #MODELOS DE TREINO 2014,1 - 2021, 5 SANGUE AFERESE ###
-TreinoMdlPlaquetas <- window(myTsPlaquetas, start = c(2014, 1), end = c(2021, 5)) # 18MESES
-#testarMDLPlaquetas <- window(myTsPlaquetas, start = c(2021, 6), end = c(2022, 12))
+TreinoMdlPlaquetas <- window(myTsPlaquetas, start = c(2014, 1), end = c(2021, 2)) # 18MESES
+MapeMdlPlaquetas <- window(myTsPlaquetas, start = c(2021, 3), end = c(2022, 12))
 modeloTestePlaquetas <- treinar_modelos(TreinoMdlPlaquetas, TotalMesesTeste)
 
 # MODELO TESTE ARIMA
@@ -191,13 +203,18 @@ modeloTestePlaquetas <- treinar_modelos(TreinoMdlPlaquetas, TotalMesesTeste)
 # lines(modeloTestePlaquetas[[1]], col = "red")
 # legend("topright", legend = c("Real", "TSLM", "ARIMA(0,1,2)", "ETS(M,N,N)"), col = c("black", "red", "blue", "green"), lty = 1:2, cex = 0.8)
 # close.screen(all = T)
-mapePlaquetasEts <- 5#forecast::accuracy(testarMDLPlaquetas, modeloTestePlaquetas[[1]]$model$fitted)["Test set", "MAPE"]
-mapePlaquetasRL <- 4#forecast::accuracy(testarMDLPlaquetas, modeloTestePlaquetas[[2]])["Test set", "MAPE"]
-mapePlaquetasArima <- 6#forecast::accuracy(testarMDLPlaquetas, TreinoArimaPlaquetas$fitted)["Test set", "MAPE"]
-melhorMapePlaquetas <- min(mapePlaquetasEts, mapePlaquetasRL, mapePlaquetasArima)
-#print(paste("ETS: "),mapePlaquetasEts)
-#print(paste("RL: "),mapePlaquetasRL)
-#print(paste("Arima: "),mapePlaquetasArima)
+mapePlaquetasEts <- forecast::accuracy(modeloTestePlaquetas[[1]], MapeMdlPlaquetas)["Test set", "MAPE"]
+mapePlaquetasRL <- forecast::accuracy(modeloTestePlaquetas[[2]], MapeMdlPlaquetas)["Test set", "MAPE"]
+#mapePlaquetasArima <- 9#forecast::accuracy(testarMDLPlaquetas, TreinoArimaPlaquetas$fitted)["Test set", "MAPE"]
+melhorMapePlaquetas <- min(mapePlaquetasEts, mapePlaquetasRL)
+#, mapePlaquetasArima
+
+################################TESTE DE NORMALIDADE PLAQUETAS #################
+print(paste("ETS: ", mapePlaquetasEts))
+print(paste("RL: ", mapePlaquetasRL))
+#print(paste("Arima: ", mapePlaquetasArima))
+print(paste("Melhor modelo Mape plaquetas:", melhorMapePlaquetas))
+
 
 
 #################################### APLICAÇÃO WEB SHINY #######################
@@ -252,7 +269,8 @@ ui <- bootstrapPage(
     # BOTAO ADICIONAR DADOS
     
     addDados = actionButton("addDados","Adicionar Dados"),
-    
+    # MAPE
+    #mapeTotal = textOutput("mapeSangueTotal"),
     # CHAMADA GRAFICOS SANGUE TOTAL NO HTML
     graficoLinhaTotal = dygraphOutput("graficoLinhaTotal"),
     grafSazonalTotal = plotOutput("grafSazonalTotal"),
@@ -267,29 +285,31 @@ ui <- bootstrapPage(
 server <- function(input, output) {
   output$renderUIServer <- renderUI({
     # BUSCAR MELHOR MODELO SANGUE TOTAL
-    melhorMdlTotal <- if (melhorMapePlaquetas == mapeTotalEts) {
+    melhorMdlTotal <- if (melhorMapeTotal == mapeTotalEts) {
       melhorMdlTotal <- modelosSangueTotal[[1]]
-    } else if (melhorMapePlaquetas == mapeTotalRL) {
+    } else{
+      #if (melhorMapeTotal == mapeTotalRL)
       melhorMdlTotal <- modelosSangueTotal[[2]]
-    } else {
-      # ARIMA
-      mdlArimaTotal <- auto.arima(treinoSangueTotal, trace = T, stepwise = F, approximation = F)
-      prevArimaTotal <- forecast(mdlArimaTotal, h = TotalMesesTeste)
-      melhorMdlTotal <- prevArimaTotal
-    }
+    }# else {
+    # # ARIMA
+    #  mdlArimaTotal <- auto.arima(treinoSangueTotal, trace = T, stepwise = F, approximation = F)
+    #  prevArimaTotal <- forecast(mdlArimaTotal, h = TotalMesesTeste)
+    #  melhorMdlTotal <- prevArimaTotal
+    #}
     
     # BUSCAR MELHOR MODELO SANGUE PLAQUETAS
     
-    melhorMdlPlaquetas <- if (melhorMapeTotal == mapeTotalEts) {
+    melhorMdlPlaquetas <- if (melhorMapePlaquetas == mapeTotalEts) {
       melhorMdlPlaquetas <- modelosAfereseTotal[[1]]
-    } else if (melhorMapeTotal == mapeTotalRL) {
-      melhorMdlPlaquetas <- modelosAfereseTotal[[2]]
     } else {
-       ARIMA
-      mdlArimaPlaquetas <- auto.arima(treinoAfereseTotal, trace = T, stepwise = F, approximation = F)
-      prevArimaPlaquetas <- forecast(mdlArimaPlaquetas, h = TotalMesesTeste)
-      melhorMdlPlaquetas <- prevArimaPlaquetas
-    }
+      #if (melhorMapePlaquetas == mapeTotalRL) 
+      melhorMdlPlaquetas <- modelosAfereseTotal[[2]]
+    } #else {
+      ##ARIMA
+      #mdlArimaPlaquetas <- auto.arima(treinoAfereseTotal, trace = T, stepwise = F, approximation = F)
+      #prevArimaPlaquetas <- forecast(mdlArimaPlaquetas, h = TotalMesesTeste)
+      #melhorMdlPlaquetas <- prevArimaPlaquetas
+    #}
     # teste
     # plot(treinoSangueTotal, xlab = "Tempo", ylab = "Nº de bolsas", col = "black")
     # lines(melhorMdlTotal, col = "red")
@@ -326,6 +346,10 @@ server <- function(input, output) {
       # Aqui você pode adicionar o código para salvar os dados em sua planilha xlsx
       # Você pode acessar o valor inserido com input$totalBags
       removeModal()
+    })
+    ######################## MAPE ####################################
+    output$mapeSangueTotal -> renderText({
+      paste("funciona")
     })
     
     ###################### JUNCAO DAS SERIES TEMPORAIS ######################

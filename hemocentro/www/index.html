@@ -12,12 +12,11 @@
       </div>
     </header>
     <div class="container-fluid px-4 mx-auto" style="width: 95%" id="graficos">
-      
       <!--Cards feito no shiny Rstudio-->
       {{cards}}
-      
+
       <!--Range da data-->
-      <div class="row justify-content-center align-items-center g-2 ">
+      <div class="row justify-content-center align-items-center g-2">
         <div class="col">{{intervalo_tempo_total}}</div>
         <!--<div class="col d-flex justify-content-center">{{addDados}}</div>-->
         <div class="col d-flex justify-content-end">
@@ -27,7 +26,6 @@
 
       <!--3º divisao - Graficos de linha-->
       <div class="row">
-
         <!--bolsa total-->
         <div class="col">
           <div class="card">
@@ -48,11 +46,14 @@
           </div>
         </div>
       </div>
-
-      <!--4º divisao - Graficos de barras-->
+      <div class="row justify-content-center align-items-center g-2  d-flex justify-content-center">
+        <div class="col">Erro Médio (MAPE): <div id="mapeSangueTotal"></div> / Erro aproximado em Nº de bolsas: 223</div>
+        <!--<div class="col d-flex justify-content-center">{{addDados}}</div>-->
+        <div class="col">Erro Médio (MAPE): 5,34% / Erro aproximado em Nº de bolsas: 223</div>
+      </div>
+      <!--4º divisao - Graficos de sazonalidade-->
       <div class="row g-4 my-2">
-
-        <!--apresentar grafico atual de barras-->
+        <!--apresentar grafico de sazonalidade-->
         <div class="col">
           <div class="card">
             <div class="card-body">
@@ -61,12 +62,12 @@
             </div>
           </div>
         </div>
-        
-        <!--apresentar grafico predicao de barras-->
+
+        <!--apresentar grafico predicao de sazonalidade-->
         <div class="col">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Bolsas Plaquetas Aférese</h5>
+              <h5 class="card-title">Bolsas de Plaquetas</h5>
               <p class="card-text">{{grafSazonalAferese}}</p>
             </div>
           </div>
