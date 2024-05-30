@@ -121,8 +121,8 @@ plot_grafico <- function(dados_e_previsao_filtered, previsao, y_label) {
 
 # TOTAL MESES COLETA DE SANGUE TOTAL E PLAQUETAS
 TotalMeses <- 108
-TotalMesesTreino <- ceiling(0.8 * TotalMeses)
-
+TotalMesesTreino <- floor(0.8 * TotalMeses)
+print(paste('TotalmesesTreino',TotalMesesTreino))
 # TOTAL MESES PARA PREVISAO (TOTAL 20%)
 TotalMesesTeste <- TotalMeses - TotalMesesTreino
 
@@ -148,13 +148,13 @@ modelosAfereseTotal <- treinar_modelos(treinoAfereseTotal, TotalMesesTeste)
 ########################### MAPE MODELO SANGUE TOTAL #######################
 
 #MODELOS DE TREINO 2014,1 - 2021, 5 SANGUE TOTAL ###
-TreinoMdlTotal <- window(mytsTotal, start = c(2014, 1), end = c(2021, 2)) # 18MESES
-MapeMdlTotal <- window(mytsTotal, start = c(2021, 3), end = c(2022, 12)) # 18MESES
+TreinoMdlTotal <- window(mytsTotal, start = c(2014, 1), end = c(2021, 2)) 
+MapeMdlTotal <- window(mytsTotal, start = c(2021, 3), end = c(2022, 12))
 #TESTE MAPE
 modeloTesteTotal = treinar_modelos(TreinoMdlTotal, TotalMesesTeste)
 
-#TreinoArimaTotal <- auto.arima(TreinoMdlTotal, trace = T, stepwise = F, approximation = F)
-#prevTesteArimaTotal <- forecast(TreinoArimaTotal, h=TotalMesesTeste)
+TreinoArimaTotal <- auto.arima(TreinoMdlTotal, trace = T, stepwise = F, approximation = F)
+prevTesteArimaTotal <- forecast(TreinoArimaTotal, h=TotalMesesTeste)
 # NIVEL DE ERRO MAPE (QUANTO MENOR MELHOR O MODELO)
 #ETS
 mapeTotalEts <- forecast::accuracy(modeloTesteTotal[[1]], MapeMdlTotal)["Test set", "MAPE"]
@@ -163,11 +163,11 @@ mapeTotalEts <- forecast::accuracy(modeloTesteTotal[[1]], MapeMdlTotal)["Test se
 mapeTotalRL <- forecast::accuracy(modeloTesteTotal[[2]], MapeMdlTotal)["Test set", "MAPE"]
 
 #ARIMA
-#mapeTotalArima <- 20#forecast::accuracy(prevTesteArimaTotal, MapeMdlTotal)["Test set", "MAPE"]
+mapeTotalArima <- forecast::accuracy(prevTesteArimaTotal, MapeMdlTotal)["Test set", "MAPE"]
 
 
-melhorMapeTotal <- min(mapeTotalEts, mapeTotalRL)
-#mapeTotalArima
+melhorMapeTotal <- min(mapeTotalEts, mapeTotalRL,mapeTotalArima)
+#
 #############################TESTE NORMALIDADE SANGUE TOTAL####################
 # TESTE NORMALIDADE NOS RESÍDUOS SANGUE TOTAL
 shapiro.test(modeloTesteTotal[[1]]$residuals)
@@ -175,10 +175,12 @@ shapiro.test(modeloTesteTotal[[2]]$residuals)
 # TESTE NORMALIDADE SANGUE TOTAL
 checkresiduals(modeloTesteTotal[[1]])
 checkresiduals(modeloTesteTotal[[2]])
-#checkresiduals(mapeTotalArima)
+checkresiduals(prevTesteArimaTotal)
+
 print(paste("modelo ETS:",mapeTotalEts))
 print(paste("modelo RL:",mapeTotalRL))
-#print(paste("modelo ARIMA:",mapeTotalArima))
+print(paste("modelo ARIMA:",mapeTotalArima))
+print(TreinoArimaTotal)
 print(paste("Melhor modelo Mape:", melhorMapeTotal))
 
 ########################### MAPE MODELO PLAQUETAS #######################
@@ -189,8 +191,8 @@ MapeMdlPlaquetas <- window(myTsPlaquetas, start = c(2021, 3), end = c(2022, 12))
 modeloTestePlaquetas <- treinar_modelos(TreinoMdlPlaquetas, TotalMesesTeste)
 
 # MODELO TESTE ARIMA
-#TreinoArimaPlaquetas <- auto.arima(TreinoMdlPlaquetas, trace = T, stepwise = F, approximation = F)
-
+TreinoArimaPlaquetas <- auto.arima(TreinoMdlPlaquetas, trace = T, stepwise = F, approximation = F)
+prevTesteArimaPlaquetas <- forecast(TreinoArimaPlaquetas, h=TotalMesesTeste)
 
 # NIVEL DE ERRO MAPE (QUANTO MENOR MELHOR O MODELO)
 # SANGUEPLAQUETAS
@@ -205,14 +207,13 @@ modeloTestePlaquetas <- treinar_modelos(TreinoMdlPlaquetas, TotalMesesTeste)
 # close.screen(all = T)
 mapePlaquetasEts <- forecast::accuracy(modeloTestePlaquetas[[1]], MapeMdlPlaquetas)["Test set", "MAPE"]
 mapePlaquetasRL <- forecast::accuracy(modeloTestePlaquetas[[2]], MapeMdlPlaquetas)["Test set", "MAPE"]
-#mapePlaquetasArima <- 9#forecast::accuracy(testarMDLPlaquetas, TreinoArimaPlaquetas$fitted)["Test set", "MAPE"]
-melhorMapePlaquetas <- min(mapePlaquetasEts, mapePlaquetasRL)
-#, mapePlaquetasArima
+mapePlaquetasArima <- forecast::accuracy(prevTesteArimaPlaquetas, MapeMdlPlaquetas)["Test set", "MAPE"]
+melhorMapePlaquetas <- min(mapePlaquetasEts, mapePlaquetasRL, mapePlaquetasArima)
 
 ################################TESTE DE NORMALIDADE PLAQUETAS #################
-print(paste("ETS: ", mapePlaquetasEts))
-print(paste("RL: ", mapePlaquetasRL))
-#print(paste("Arima: ", mapePlaquetasArima))
+print(paste("ETS PLAQUETAS: ", mapePlaquetasEts))
+print(paste("RL PLAQUETAS: ", mapePlaquetasRL))
+print(paste("Arima PLAQUETAS: ", mapePlaquetasArima))
 print(paste("Melhor modelo Mape plaquetas:", melhorMapePlaquetas))
 
 
@@ -235,6 +236,14 @@ ui <- bootstrapPage(
 
   # TAG HEAD
   tags$head(
+    tags$style(HTML("
+    .dygraph-axis-label {
+      font-size: 12px  !important;
+    }
+    .dygraph-axis-label-x {
+      font-size: 12px  !important;
+    }
+  ")),
     tags$meta(charset = "UTF-8"),
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
     tags$link(rel = "preconnect", href = "https://fonts.googleapis.com"),
@@ -288,34 +297,33 @@ server <- function(input, output) {
     # BUSCAR MELHOR MODELO SANGUE TOTAL
     melhorMdlTotal <- if (melhorMapeTotal == mapeTotalEts) {
       melhorMdlTotal <- modelosSangueTotal[[1]]
-    } else{
-      #if (melhorMapeTotal == mapeTotalRL)
+    } else if (melhorMapeTotal == mapeTotalRL){
       melhorMdlTotal <- modelosSangueTotal[[2]]
-    }# else {
-    # # ARIMA
-    #  mdlArimaTotal <- auto.arima(treinoSangueTotal, trace = T, stepwise = F, approximation = F)
-    #  prevArimaTotal <- forecast(mdlArimaTotal, h = TotalMesesTeste)
-    #  melhorMdlTotal <- prevArimaTotal
-    #}
+    } else {
+    # ARIMA
+      mdlArimaTotal <- auto.arima(treinoSangueTotal, trace = T, stepwise = F, approximation = F)
+      prevArimaTotal <- forecast(mdlArimaTotal, h = TotalMesesTeste)
+      print(autoplot(prevArimaTotal))
+      melhorMdlTotal <- prevArimaTotal
+    }
     
     # BUSCAR MELHOR MODELO SANGUE PLAQUETAS
     
     melhorMdlPlaquetas <- if (melhorMapePlaquetas == mapeTotalEts) {
       melhorMdlPlaquetas <- modelosAfereseTotal[[1]]
-    } else {
-      #if (melhorMapePlaquetas == mapeTotalRL) 
+    } else if (melhorMapePlaquetas == mapeTotalRL) {
       melhorMdlPlaquetas <- modelosAfereseTotal[[2]]
-    } #else {
-      ##ARIMA
-      #mdlArimaPlaquetas <- auto.arima(treinoAfereseTotal, trace = T, stepwise = F, approximation = F)
-      #prevArimaPlaquetas <- forecast(mdlArimaPlaquetas, h = TotalMesesTeste)
-      #melhorMdlPlaquetas <- prevArimaPlaquetas
-    #}
+    } else {
+      #ARIMA
+      mdlArimaPlaquetas <- auto.arima(treinoAfereseTotal, trace = T, stepwise = F, approximation = F)
+      prevArimaPlaquetas <- forecast(mdlArimaPlaquetas, h = TotalMesesTeste)
+      melhorMdlPlaquetas <- prevArimaPlaquetas
+    }
     # teste
-    # plot(treinoSangueTotal, xlab = "Tempo", ylab = "Nº de bolsas", col = "black")
-    # lines(melhorMdlTotal, col = "red")
-    # legend("topright", legend = c("Real", "TSLM", "ARIMA(0,1,2)", "ETS(M,N,N)"), col = c("black", "red", "blue", "green"), lty = 1:2, cex = 0.8)
-    # close.screen(all = T)
+     #plot(treinoSangueTotal, xlab = "Tempo", ylab = "Nº de bolsas", col = "black")
+     #lines(melhorMdlTotal, col = "red")
+     #legend("topright", legend = c("Real", "TSLM", "ARIMA(0,1,2)", "ETS(M,N,N)"), col = c("black", "red", "blue", "green"), lty = 1:2, cex = 0.8)
+     #close.screen(all = T)
     ########################## SANGUE TOTAL MANIPULACAO #############################
     # OBTER DATAS
     resSangueTotal <- filtrarDados(input$datesSangueTotal, mytsTotal)
@@ -375,7 +383,7 @@ server <- function(input, output) {
     estatisticasAferese <- calcEstatistica(afereseFiltro)
     ######################## MAPE ####################################
     output$mapeSangueTotal <- renderUI({
-      HTML(paste('<div id = mape class="row justify-content-center align-items-center g-2  d-flex justify-content-center">','<div class="col text-center">Erro Médio (MAPE): ', round(melhorMapeTotal, 2), '% / Erro aproximado em Nº de bolsas: ',round(((melhorMapeTotal*estatisticasTotal$media)/100),2),'</div> <div class="col text-center">Erro Médio (MAPE): ',round(melhorMapePlaquetas,2),'% / Erro aproximado em Nº de bolsas: ',round(((melhorMapePlaquetas*estatisticasTotal$media)/100),2),'</div></div>'))
+      HTML(paste('<div id = mape class="row justify-content-center align-items-center g-2  d-flex justify-content-center">','<div class="col text-center">Erro Médio (MAPE): ', round(melhorMapeTotal, 2), '% / Erro aproximado em Nº de bolsas: ',round(((melhorMapeTotal*estatisticasTotal$media)/100),2),'</div> <div class="col text-center">Erro Médio (MAPE): ',round(melhorMapePlaquetas,2),'% / Erro aproximado em Nº de bolsas: ',round(((melhorMapePlaquetas*estatisticasAferese$media)/100),2),'</div></div>'))
     })
     ################### PLOT GRAFICO SANGUE TOTAL ##############################
     colnames(dados_e_previsao_filtered)
