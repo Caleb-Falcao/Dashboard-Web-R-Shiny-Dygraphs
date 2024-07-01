@@ -9,6 +9,8 @@ library(forecast)
 library(dygraphs)
 library(feasts)
 library(ggplot2)
+library(plotly)
+library(dplyr)
 ############################ INICIALIZAÇÃO DAS SÉRIES TEMPORAIS ################
 dadosTotal <-
   read_excel("dados_sangue_2022.xlsx", sheet = "total", col_names = FALSE)
@@ -282,11 +284,11 @@ ui <- bootstrapPage(
     mapeTotal = uiOutput("mapeSangueTotal"),
     # CHAMADA GRAFICOS SANGUE TOTAL NO HTML
     graficoLinhaTotal = dygraphOutput("graficoLinhaTotal"),
-    grafSazonalTotal = plotOutput("grafSazonalTotal"),
+    grafSazonalTotal = plotlyOutput("grafSazonalTotal"),
 
     # CHAMADA GRAFICOS SANGUE AFERESE NO HTML
     graficoLinhaAferese = dygraphOutput("graficoLinhaAferese"),
-    grafSazonalAferese = plotOutput("grafSazonalAferese")
+    grafSazonalAferese = plotlyOutput("grafSazonalAferese")
   )
 )
 
@@ -391,32 +393,48 @@ server <- function(input, output) {
     output$graficoLinhaTotal <- plot_grafico(dados_e_previsao_filtered, "previsaoTotal", "Nº de bolsas total")
     # GRAFICO SAZONAL
     
-    mytsibbleTotal <- as_tsibble(mytsTotal)
+    mytsibbleTotal <- as_tsibble(mytsTotal) %>%
+      rename(Bolsas = value)
     
-    output$grafSazonalTotal<- renderPlot({
+    str(mytsibbleTotal)
+    
+    output$grafSazonalTotal <- renderPlotly({
       pg <- gg_season(mytsibbleTotal, labels = "both", polar = FALSE) +
         labs(y = "Nº Bolsas", title = "", x = "Meses") +
         geom_line(size = 1.2) +
         theme(axis.title = element_text(size = 14),
-        axis.text = element_text(size = 12))
-      pg
+              axis.text = element_text(size = 12))
+      ggplotly(pg, tooltip = c("Bolsas", "id"))
     })
     ##################### PLOT GRAFICO SANGUE AFERESE ##########################
     # GRAFICO LINHA
     output$graficoLinhaAferese <- plot_grafico(dados_e_previsao_aferese_filtered, "previsao_aferese", "Nº de bolsas aférese")
     
     # GRAFICO SAZONAL
+    mytsibbleAferese <- as_tsibble(myTsPlaquetas) %>%
+      rename(Bolsas = value)
     
-    mytsibbleAferese <- as_tsibble(myTsPlaquetas)
+    str(mytsibbleAferese)
     
-    output$grafSazonalAferese<- renderPlot({
+    output$grafSazonalAferese <- renderPlotly({
       pg <- gg_season(mytsibbleAferese, labels = "both", polar = FALSE) +
         labs(y = "Nº Bolsas", title = "", x = "Meses") +
         geom_line(size = 1.2) +
         theme(axis.title = element_text(size = 14),
               axis.text = element_text(size = 12))
-      pg
+      ggplotly(pg, tooltip = c("Bolsas", "id"))
     })
+    
+    #mytsibbleAferese <- as_tsibble(myTsPlaquetas)
+    
+    #output$grafSazonalAferese<- renderPlot({
+    #  pg <- gg_season(mytsibbleAferese, labels = "both", polar = FALSE) +
+    #    labs(y = "Nº Bolsas", title = "", x = "Meses") +
+    #    geom_line(size = 1.2) +
+    #    theme(axis.title = element_text(size = 14),
+    #          axis.text = element_text(size = 12))
+    #  pg
+    #})
     ################### RETORNA CARDS COM DADOS ESTATISTICOS####################
     HTML(
       paste(
