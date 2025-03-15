@@ -2,7 +2,7 @@ DASHBOARD WEB PARA AUXILIAR A FHB NA GESTÃO DE SANGUE E PLAQUETAS AFÉRESE
 
 ## 💻 Project
 
-Está sendo desenvolvido um protótipo de Dashboard Web focado na Fundação Hemocentro de Brasília (FHB). Esse foi meu projeto de TCC junto com o Rafael dos Santos e nosso orientador Fernando Wagner, utiliza dados reais de bolsas de sangue da Fundação. Ele é construído com R, HTML, CSS, Bootstrap e bibliotecas de previsão, com prototipagem no Figma. O objetivo é auxiliar na gestão de bolsas de Sangue e Aférese.
+Este trabalho foi fruto de um projeto audacioso, motivado pela ascensão da análise de dados e pelo reconhecimento de seu impacto na tomada de decisões. Com isso em mente, desenvolvi, em colaboração com meu professor orientador e um colega de turma, um Dashboard Web voltado para um Hemocentro público. O projeto foi implementado utilizando a linguagem R, além de tecnologias como HTML, CSS e bibliotecas específicas, como Shiny para criação do ambiente web, Forecast para predição de dados, e Dygraphs para visualização dos resultados.
 
 ## :lantern: Contributors
 
@@ -20,5 +20,5 @@ Rafael do Santos
 
 ## 🔮 Deploy
 
-Teste aqui o Dashboard: https://calebfalcao.shinyapps.io/hemocentro/
+Resultado o Dashboard: https://calebfalcao.shinyapps.io/hemocentro/
 
